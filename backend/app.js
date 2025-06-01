@@ -108,7 +108,7 @@ app.get('/callback',
   //     return;
   //   }
     // res.redirect(`http://${process.env._IP}:3000/?code=${token}`);
-    res.redirect(`myapp://auth/callback?token=${token}`); 
+    res.redirect(`app0://auth/callback?token=${token}`); 
   }
 );
 
