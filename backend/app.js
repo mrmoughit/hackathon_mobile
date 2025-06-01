@@ -213,7 +213,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     date,
     time
   } = req.body;
-  console.log({  location, title, description, image,time, maxPlaces, date });
+  console.log({  location, title, description, time, maxPlaces, date });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
