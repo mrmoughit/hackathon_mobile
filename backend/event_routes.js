@@ -248,39 +248,38 @@ router.put('/events/Edit', async (req, res) => {
 router.delete('/events_delete', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json("Invalid token");
+  if (!token) return res.status(401).json({ message: "Invalid token" });
 
-  const event_id = req.body.event_id;
-
-
-  console.log(event_id);
-  if (!event_id) return res.status(400).json("Missing event ID");
+  const { event_id } = req.body;
+  if (!event_id) return res.status(400).json({ message: "Missing event ID" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
     const isAdmin = await check_if_admin(userLogin);
-    if (!isAdmin) return res.status(403).json("Not allowed to delete event");
+    if (!isAdmin) return res.status(403).json({ message: "Not allowed to delete event" });
 
     const userId = await get_user_id(userLogin);
-    if (userId === -1) return res.status(500).json("Internal server error");
+    if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
-    const query = "DELETE FROM event WHERE event_id = ? AND user_id = ?";
-    pool.query(query, [event_id, userId], (err, result) => {
-      if (err) {
-        return res.status(500).json("Database error");
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json("Event not found or not owned by user");
-      }
-      return res.status(200).json("Deleted successfully");
-    });
+    const [result] = await pool.query(
+      'DELETE FROM event WHERE event_id = ? AND user_id = ?',
+      [event_id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Event not found or not owned by user" });
+    }
+
+    return res.status(200).json({ message: "Deleted successfully" });
 
   } catch (err) {
-    res.status(500).json("Internal server error");
+    console.error("Error deleting event:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 
 
