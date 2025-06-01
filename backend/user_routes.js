@@ -116,7 +116,6 @@ user_router.post('/add/saved/event', async (req, res) => {
 
 
 user_router.post('/add_registration', async (req, res) => {
-    console.log("herererer");
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -135,8 +134,6 @@ user_router.post('/add_registration', async (req, res) => {
         const userLogin = decoded.login;
         
         const id = await get_user_id(userLogin);
-        console.log(id);
-        console.log(userLogin);
         if (id === -1) {
             return res.status(404).json({ error: "User not found" });
         }
