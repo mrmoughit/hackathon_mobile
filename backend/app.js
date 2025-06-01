@@ -13,6 +13,7 @@ import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import { access } from 'fs';
 import { log } from 'console';
+import {create_new_user} from './help.js'
 const options = { expiresIn: '2h' };
 
 dotenv.config();
@@ -96,7 +97,6 @@ app.get('/callback',
     const payload = { login: login };
     const token = jwt.sign(payload, process.env.JWT_SECRET, options);
 
-    console.log(token);
 
     const query = `
     UPDATE users
