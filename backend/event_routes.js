@@ -189,7 +189,6 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ message: "Invalid token" });
 
-
   const {
     title,
     description,
@@ -200,7 +199,6 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
     event_id
   } = req.body;
 
-  console.log("here" , event_id );
   if (
     event_id == null || title == null || description == null || location == null ||
     max_places == null || date == null || time == null
@@ -218,18 +216,16 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
     const userId = await get_user_id(userLogin);
     if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
-    // If image is uploaded, get its path; otherwise null
     const imagePath = req.file ? req.file.path : null;
 
-    // Build query dynamically to update image only if provided
     let query = `
       UPDATE event
-      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, date = ?
+      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, event_date = ?
     `;
     const params = [title, description, location, max_places, time, date];
 
     if (imagePath) {
-      query += `, event_image = ? `;
+      query += `, event_image = ?`;
       params.push(imagePath);
     }
 
@@ -239,6 +235,7 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
     await pool.query(query, params);
 
     res.status(200).json({ message: "Event updated successfully" });
+
   } catch (err) {
     console.error("Error editing event:", err);
     res.status(500).json({ message: "Internal server error" });
