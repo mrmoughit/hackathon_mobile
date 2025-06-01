@@ -192,7 +192,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
-    const q = 'SELECT user_id FROM users WHERE intra_login = ?';
+    const q = 'SELECT id FROM users WHERE intra_login = ?';
     const [rows] = await pool.query(q, [userLogin]);
 
     if (rows.length === 0) {
