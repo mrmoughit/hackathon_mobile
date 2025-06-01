@@ -181,8 +181,7 @@ const upload = multer({ storage });
 
 
 app.post('/addevent', upload.single('image'), async (req, res) => {
-
-  var user_id;
+  let user_id;
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token)
@@ -199,7 +198,8 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const user_id = rows[0].user_id;
+    user_id = rows[0].id;  // Correct column name and assign to outer variable
+
   } catch (err) {
     console.error(err);
     return res.status(401).json({ error: "Invalid token" });
@@ -223,7 +223,6 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   try {
     const conn = await pool.getConnection();
 
-
     const [locationRows] = await conn.execute(
       'SELECT location_id FROM location WHERE city = ? AND place_name = ?',
       [city, place_name]
@@ -245,7 +244,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        user_id,
+        user_id,          // <== this now has a proper value
         location_id,
         title,
         description,
@@ -255,7 +254,6 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         eventDateTime
       ]
     );
-    
 
     conn.release();
     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
@@ -265,6 +263,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 
 
 server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
