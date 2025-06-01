@@ -5,7 +5,7 @@ export async function create_new_user(login, img, full_name) {
       const [rows] = await pool.query('SELECT * FROM users WHERE intra_login = ?', [login]);
   
       if (rows.length === 0) {
-        const query = 'INSERT INTO users (img, full_name, role, intra_login) VALUES (?, ?, ?, ?)';
+        const query = 'INSERT INTO users (image, full_name, role, intra_login) VALUES (?, ?, ?, ?)';
         const role = 'attendee';
         await pool.query(query, [img, full_name, role, login]);
       }
