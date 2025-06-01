@@ -100,17 +100,16 @@ app.get('/callback',
 
     const query = `
     UPDATE users
-    SET token_intra = ? , token_2 = ?
+    SET access_token = ? 
     WHERE intra_login = ?
   `;
 
     try {
-      const res = await pool.query(query, [token, accessToken, login]);
+      const res = await pool.query(query, [token , login]);
     } catch (err) {
       console.log(err);
       return;
     }
-    // res.redirect(`http://${process.env._IP}:3000/?code=${token}`);
     res.redirect(`app0://auth/callback?token=${token}`); 
   }
 );
