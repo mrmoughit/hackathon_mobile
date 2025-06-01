@@ -232,7 +232,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     } else {
       const [insertLocation] = await conn.execute(
         'INSERT INTO location (place_name) VALUES (?)',
-        [place_name]
+        [location]
       );
       location_id = insertLocation.insertId;
     }
