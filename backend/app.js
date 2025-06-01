@@ -222,7 +222,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   } = req.body;
 
   if (
-    event_id == null || title == null || description == null || location == null ||
+    title == null || description == null || location == null ||
     max_places == null || date == null || time == null
   ) {
     return res.status(400).json("Missing required data");
