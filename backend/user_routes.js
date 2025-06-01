@@ -204,7 +204,7 @@ user_router.get('/is_resgiter', async (req, res) => {
             [id, event_id]
         );
 
-        return res.status(200).json({ registered: result.length > 0 });
+        return res.status(200).json({ registered: result.length < 0 });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Internal server error" });
@@ -214,7 +214,7 @@ user_router.get('/is_resgiter', async (req, res) => {
 
 
 user_router.delete('/delete_register', async (req, res) => {
-    
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
