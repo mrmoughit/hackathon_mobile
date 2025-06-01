@@ -271,7 +271,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 app.get('/events', async (req, res) => {
   try {
-      const [rows] = await db.query(`
+      const [rows] = await pool.query(`
           SELECT 
               e.event_id,
               e.user_id,
