@@ -13,7 +13,7 @@ import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import { access } from 'fs';
 import { log } from 'console';
-import { create_new_user  , convert_houre , check_if_admin} from './help.js'
+import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
 import multer from 'multer';
 import path from 'path';
 
@@ -120,7 +120,6 @@ app.get('/callback',
 
 app.get('/user', async (req, res) => {
 
-
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token)
@@ -168,13 +167,22 @@ app.get('/user', async (req, res) => {
 
 
 
+// const storage = multer.diskStorage({
+//   destination: './uploads/',
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   }
+// });
+
+
 const storage = multer.diskStorage({
-  destination: './uploads/',
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
-
 
 const upload = multer({ storage });
 
@@ -217,12 +225,17 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     time
   } = req.body;
 
+  if (
+    event_id == null || title == null || description == null || location == null ||
+    max_places == null || date == null || time == null
+  ) {
+    return res.status(400).json("Missing required data");
+  }
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   
   const time24h = convert_houre(time);
   const eventDateTime = new Date(`${date}T${time24h}`);
-  console.log(date ,"  ===> ", time);
-  console.log(eventDateTime);
+
 
   try {
     const conn = await pool.getConnection();
@@ -272,69 +285,127 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 
-app.get('/events', async (req, res) => {
-
+app.put('/events/edit', upload.single('image'), async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token)
-    return res.status(401).json("invalid token");
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const login = decoded.login;
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json("Invalid token");
+
+  const {
+    event_id,
+    title,
+    description,
+    location,
+    max_places,
+    date,
+    time
+  } = req.body;
+
+  const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+  if (
+    event_id == null || title == null || description == null || location == null ||
+    max_places == null || date == null || time == null
+  ) {
+    return res.status(400).json("Missing required data");
   }
 
   try {
-      const [rows] = await pool.query(`
-          SELECT 
-              e.event_id,
-              e.user_id,
-              e.event_title,
-              e.time,
-              e.number_places_available,
-              e.duration,
-              e.event_description,
-              e.event_image,
-              l.location_id,
-              l.city,
-              l.place_name,
-              COUNT(r.id) AS number_of_registrations
-          FROM event e
-          LEFT JOIN location l ON e.location_id = l.location_id
-          LEFT JOIN registration r ON e.event_id = r.event_id
-          GROUP BY e.event_id
-      `);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
 
-      const events = rows.map(row => ({
-          event_id: row.event_id,
-          user_id: row.user_id,
-          event_title: row.event_title,
-          time: row.time,
-          number_places_available: row.number_places_available,
-          duration: row.duration,
-          event_description: row.event_description,
-          event_image: row.event_image,
-          location: {
-              location_id: row.location_id,
-              city: row.city,
-              place_name: row.place_name
-          },
-          number_of_registrations: row.number_of_registrations
-      }));
+    const isAdmin = await check_if_admin(userLogin);
+    if (!isAdmin)
+      return res.status(403).json("Not allowed to edit event");
 
-      res.json(events);
+    const userId = await get_user_id(userLogin);
+    if (userId === -1)
+      return res.status(500).json("Internal server error");
+
+    const query = `
+      UPDATE event
+      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, date = ?, event_image = ?
+      WHERE event_id = ? AND user_id = ?
+    `;
+
+    await pool.query(query, [
+      title,
+      description,
+      location,
+      max_places,
+      time,
+      date,
+      image,
+      event_id,
+      userId
+    ]);
+
+    res.status(200).json("Event updated successfully");
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+});
+
+app.put('/events/Edit', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token ");
+
+  const {
+    title,
+    description,
+    location,
+    max_places,
+    date,
+    time
+  } = req.body;
+  if (
+    event_id == null || title == null || description == null || location == null ||
+    max_places == null || date == null || time == null
+  ) {
+    return res.status(400).json("Missing required data");
+  }
+  try {
+
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
+    if(!check_if_admin(userLogin))
+      return res.status(401).json("not allowed to edit event");
+
+    const id = get_user_id(userLogin);
+    if (id == -1)
+      return res.status(500).json("internal server error");
+  
+    const query = `
+    UPDATE event
+    SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, date = ?
+    WHERE event_id = ? AND user_id = ?
+  `;
+
+  await pool.query(query, [
+    title,
+    description,
+    location,
+    max_places,
+    time,
+    date,
+    event_id,
+    userId
+  ]);
+
+  res.status(200).json("Event updated successfully");
+
+  }catch(err){
+    res.status(500).json("internal server error");
   }
 });
 
 
+app.delete('/events/Edit', async (req, res) => {
 
-
-
-
+});
 
 
 server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
