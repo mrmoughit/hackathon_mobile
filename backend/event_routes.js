@@ -184,24 +184,26 @@ router.get('/events', async (req, res) => {
 
 
 
+
+
+
 router.put('/events/Edit', upload.single('image'), async (req, res) => {
+  let conn;
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ message: "Invalid token" });
 
-    // Destructure text fields from the body
     const {
       title,
       description,
       location,
       max_places,
-      date,  // expected format: 'YYYY-MM-DD'
-      time,  // expected format: 'HH:mm:ss' or similar
+      date,  // 'YYYY-MM-DD'
+      time,  // 'HH:mm:ss' or similar
       event_id
     } = req.body;
 
-    // Basic validation
     if (
       event_id == null || title == null || description == null || location == null ||
       max_places == null || date == null || time == null
@@ -209,7 +211,6 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: "Missing required data" });
     }
 
-    // Verify token and get user info
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
@@ -219,41 +220,63 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
     const userId = await get_user_id(userLogin);
     if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
-    // Compose full datetime string for the event
-    // Assuming you want to combine date + time into one datetime column
-    const event_datetime = new Date(`${date}T${time}`);
+    conn = await pool.getConnection();
 
-    if (isNaN(event_datetime.getTime())) {
+    // Get or insert location_id
+    const [locationRows] = await conn.execute(
+      'SELECT location_id FROM location WHERE place_name = ?',
+      [location]
+    );
+
+    let location_id;
+    if (locationRows.length > 0) {
+      location_id = locationRows[0].location_id;
+    } else {
+      const [insertLocation] = await conn.execute(
+        'INSERT INTO location (place_name) VALUES (?)',
+        [location]
+      );
+      location_id = insertLocation.insertId;
+    }
+
+    // Convert time using your helper function (assumed to exist)
+    const time24h = convert_houre(time);
+    const eventDateTime = new Date(`${date}T${time24h}`);
+
+    if (isNaN(eventDateTime.getTime())) {
       return res.status(400).json({ message: "Invalid date or time format" });
     }
 
-    // If image uploaded, get the path
-    const imagePath = req.file ? req.file.path : null;
+    // Image URL or null
+    const imageUrl = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
 
-    // Build the SQL query dynamically to update the image only if provided
+    // Build update query dynamically to update image only if provided
     let query = `
       UPDATE event
-      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, event_datetime = ?
+      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, duration = ?, time = ?
     `;
-    const params = [title, description, location, max_places, event_datetime];
+    const params = [title, description, location_id, max_places, 60, eventDateTime];
 
-    if (imagePath) {
+    if (imageUrl) {
       query += `, event_image = ?`;
-      params.push(imagePath);
+      params.push(imageUrl);
     }
 
     query += ` WHERE event_id = ? AND user_id = ?`;
     params.push(event_id, userId);
 
-    await pool.query(query, params);
+    await conn.execute(query, params);
 
     return res.status(200).json({ message: "Event updated successfully" });
 
   } catch (err) {
     console.error("Error editing event:", err);
     return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (conn) conn.release();
   }
 });
+
 
 
 
