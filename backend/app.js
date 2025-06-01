@@ -115,19 +115,15 @@ app.get('/callback',
 
 
 
-
-
-
-
-
-
 app.get('/user', async (req, res) => {
 
   console.log("here");
-
+  console.log(req.headers);
+  
   const token = req.headers['authorization'];
   if (!token)
     return res.status(401).json("invalid token ");
+
   try {
 
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
