@@ -175,114 +175,16 @@ app.get('/user', async (req, res) => {
 // });
 
 
-app.post('/addevent', upload.single('image'), async (req, res) => {
-  let user_id;
-  let userLogin;
-
-  // Token verification
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json("Invalid token");
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    userLogin = decoded.login;
-
-    user_id = await get_user_id(userLogin);
-    if (!user_id || user_id === 0)
-      return res.status(500).json({ error: "Internal server error: User not found" });
-
-  } catch (err) {
-    console.error('JWT Error:', err);
-    return res.status(401).json({ error: "Invalid token" });
-  }
-
-  // Check if user is admin or organizer
-  const isAdmin = await check_if_admin(userLogin);
-  if (!isAdmin)
-    return res.status(403).json("Not allowed to add event");
-
-  // Get request body
-  const {
-    title,
-    description,
-    location,
-    max_places,
-    date,
-    time
-  } = req.body;
-
-  // Validate input
-  if (
-    title == null || description == null || location == null ||
-    max_places == null || date == null || time == null
-  ) {
-    return res.status(400).json("Missing required data");
-  }
-
-  // Build image URL (web-accessible path)
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
-
-  const time24h = convert_houre(time); // Optional: convert to 24h
-  const eventDateTime = new Date(`${date}T${time24h}`);
-
-  try {
-    const conn = await pool.getConnection();
-
-    // Check or insert location
-    const [locationRows] = await conn.execute(
-      'SELECT location_id FROM location WHERE place_name = ?',
-      [location]
-    );
-
-    let location_id;
-    if (locationRows.length > 0) {
-      location_id = locationRows[0].location_id;
-    } else {
-      const [insertLocation] = await conn.execute(
-        'INSERT INTO location (place_name) VALUES (?)',
-        [location]
-      );
-      location_id = insertLocation.insertId;
-    }
-
-    // Debug log (optional)
-    console.log({
-      user_id,
-      location_id,
-      title,
-      description,
-      image,
-      max_places,
-      eventDateTime
-    });
-
-    // Insert new event
-    const [insertEvent] = await conn.execute(
-      `INSERT INTO event 
-        (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        user_id,
-        location_id,
-        title,
-        description,
-        image,
-        max_places,
-        60, // hardcoded duration in minutes
-        eventDateTime
-      ]
-    );
-
-    conn.release();
-
-    res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
-
-  } catch (err) {
-    console.error('Error creating event:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, '/var/www/html/uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
+
+const upload = multer({ storage });
 
 
 
