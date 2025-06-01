@@ -15,6 +15,7 @@ import { access } from 'fs';
 import { log } from 'console';
 import { create_new_user } from './help.js'
 import multer from 'multer';
+import path from 'path';
 
 const options = { expiresIn: '5h' };
 
@@ -168,11 +169,13 @@ app.get('/user', async (req, res) => {
 
 
 const storage = multer.diskStorage({
-  destination: './uploads/', // Make sure this directory exists
+  destination: './uploads/',
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
   }
 });
+
+
 const upload = multer({ storage });
 
 
