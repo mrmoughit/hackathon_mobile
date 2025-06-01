@@ -250,7 +250,7 @@ router.delete('/events/:event_id', async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json("Invalid token");
 
-  const event_id = req.params.event_id;
+  const event_id = req.body.event_id;
   if (!event_id) return res.status(400).json("Missing event ID");
 
   try {
