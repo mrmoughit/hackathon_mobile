@@ -96,6 +96,8 @@ app.get('/callback',
     const payload = { login: login };
     const token = jwt.sign(payload, process.env.JWT_SECRET, options);
 
+    console.log(token);
+
   //   const query = `
   //   UPDATE users
   //   SET token_intra = ? , token_2 = ?
