@@ -37,7 +37,6 @@ export async function create_new_user(login, img, full_name) {
 }
 
 
-
   export async function check_if_admin(login) {
     try {
       const query = "SELECT role FROM users WHERE intra_login = ?";
