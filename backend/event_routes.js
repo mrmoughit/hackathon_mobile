@@ -196,8 +196,10 @@ router.put('/events/Edit', async (req, res) => {
     location,
     max_places,
     date,
-    time
+    time,
+    event_id
   } = req.body;
+
   if (
     event_id == null || title == null || description == null || location == null ||
     max_places == null || date == null || time == null
@@ -242,9 +244,6 @@ router.put('/events/Edit', async (req, res) => {
 
 
 
-
-
-
 router.delete('/events_delete', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -263,10 +262,8 @@ router.delete('/events_delete', async (req, res) => {
     const userId = await get_user_id(userLogin);
     if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
-    // Delete related registrations first
     await pool.query('DELETE FROM registration WHERE event_id = ?', [event_id]);
 
-    // Then delete the event
     const [result] = await pool.query(
       'DELETE FROM event WHERE event_id = ? AND user_id = ?',
       [event_id, userId]
