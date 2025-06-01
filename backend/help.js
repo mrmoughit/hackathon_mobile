@@ -17,24 +17,42 @@ export async function create_new_user(login, img, full_name) {
 
 
   export function convert_houre(timeString) {
-    const [time, modifier] = timeString.split(" ");
+    const amPmMatch = timeString.match(/\s?(AM|PM)$/i);
 
-    if (!time || !modifier) {
-        throw new Error(`Invalid time format: "${timeString}"`);
+    if (amPmMatch) {
+        const [time, modifier] = timeString.split(" ");
+
+        let [hours, minutes] = time.split(":").map(Number);
+
+        if (modifier.toUpperCase() === 'PM' && hours !== 12) {
+            hours += 12;
+        }
+        if (modifier.toUpperCase() === 'AM' && hours === 12) {
+            hours = 0;
+        }
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    } else {
+
+        const timeParts = timeString.split(":");
+        if (timeParts.length !== 2) {
+            throw new Error(`Invalid time format: "${timeString}"`);
+        }
+
+        let [hours, minutes] = timeParts.map(Number);
+
+        if (
+            isNaN(hours) || isNaN(minutes) ||
+            hours < 0 || hours > 23 ||
+            minutes < 0 || minutes > 59
+        ) {
+            throw new Error(`Invalid time format: "${timeString}"`);
+        }
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     }
-
-    let [hours, minutes] = time.split(":").map(Number);
-
-    if (modifier.toUpperCase() === 'PM' && hours !== 12) {
-        hours += 12;
-    }
-
-    if (modifier.toUpperCase() === 'AM' && hours === 12) {
-        hours = 0;
-    }
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
+
 
 
 
