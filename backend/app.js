@@ -13,7 +13,7 @@ import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import { access } from 'fs';
 import { log } from 'console';
-import { create_new_user  , convert_houre} from './help.js'
+import { create_new_user  , convert_houre , check_if_admin} from './help.js'
 import multer from 'multer';
 import path from 'path';
 
@@ -204,7 +204,10 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     console.error(err);
     return res.status(401).json({ error: "Invalid token" });
   }
-  
+
+
+  if (!check_if_admin(userLogin))
+      return res.status(401).json("not allowed to add event");
   const {
     title,
     description,
@@ -326,5 +329,12 @@ app.get('/events', async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+
+
+
+
+
 
 server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));

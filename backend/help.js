@@ -32,4 +32,15 @@ export async function create_new_user(login, img, full_name) {
   
     return `${hoursStr}:${minutesStr}:00`;
   }
-  
+
+
+export async function check_if_admin(login){
+  try{
+    const query = "SELECT FROM users WHERE intra_login = ?";
+    const result = pool.query(query , login);
+    if (result.role == "admin" || result.role == "organizer")
+        return true;
+  }catch(erro){
+    return false;
+  }
+}
