@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import pool from './db';
+import pool from './db.js';
 import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
 const router = Router();
 
