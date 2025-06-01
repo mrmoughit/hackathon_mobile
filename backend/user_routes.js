@@ -30,11 +30,9 @@ user_router.get('/user', async (req, res) => {
                 const [locations] = await pool.query('SELECT * FROM location WHERE location_id = ?', [event.location_id]);
                 event.location = locations.length > 0 ? locations[0] : null;
 
-                // Get feedbacks
+
                 const [feedbacks] = await pool.query('SELECT * FROM feedback WHERE event_id = ?', [event.event_id]);
                 event.feedbacks = feedbacks;
-
-                // Get number of registrations
                 const [registrationCountRows] = await pool.query('SELECT COUNT(*) AS count FROM registration WHERE event_id = ?', [event.event_id]);
                 event.registration_count = registrationCountRows[0].count;
             }
@@ -42,6 +40,7 @@ user_router.get('/user', async (req, res) => {
             result.events = events;
         }
 
+        console.log(result);
         res.status(200).json(result);
 
     } catch (error) {
