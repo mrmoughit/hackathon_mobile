@@ -189,7 +189,7 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ message: "Invalid token" });
 
-  // Destructure event details from the body (multer puts text fields here)
+
   const {
     title,
     description,
@@ -200,6 +200,7 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
     event_id
   } = req.body;
 
+  console.log("here" , event_id );
   if (
     event_id == null || title == null || description == null || location == null ||
     max_places == null || date == null || time == null
