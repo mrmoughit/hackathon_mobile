@@ -62,16 +62,50 @@ user_router.get('/get/saved/event', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: "Token missing or invalid" });
     }
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userLogin = decoded.login;
 
         const id = await get_user_id(userLogin);
         if (id === -1) {
-            return res.status(500).json({ error: "User not found" });
+            return res.status(404).json({ error: "User not found" });
         }
 
-        const [events] = await pool.query('SELECT * FROM saved WHERE user_id = ?', [id]);
+        const [rows] = await pool.query(`
+            SELECT 
+                e.event_id,
+                e.event_title,
+                e.time,
+                e.number_places_available,
+                e.duration,
+                e.event_description,
+                e.event_image,
+                l.location_id,
+                l.city,
+                l.place_name
+            FROM saved s
+            JOIN event e ON s.event_id = e.event_id
+            JOIN location l ON e.location_id = l.location_id
+            WHERE s.user_id = ?
+        `, [id]);
+
+        // Format the result to embed location into each event object
+        const events = rows.map(row => ({
+            event_id: row.event_id,
+            event_title: row.event_title,
+            time: row.time,
+            number_places_available: row.number_places_available,
+            duration: row.duration,
+            event_description: row.event_description,
+            event_image: row.event_image,
+            location: {
+                location_id: row.location_id,
+                city: row.city,
+                place_name: row.place_name
+            }
+        }));
+
         res.status(200).json(events);
 
     } catch (error) {
@@ -79,6 +113,7 @@ user_router.get('/get/saved/event', async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 
 
 
