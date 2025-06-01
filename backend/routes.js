@@ -121,16 +121,17 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
 
 router.get('/events', async (req, res) => {
 
+
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  console.log("token" , token);
   
   if (!token)
     return res.status(401).json("invalid token");
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const login = decoded.login;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const login = decoded.login;
+      console.log("token" , login);
   } catch (err) {
     return res.status(401).json({ error: "Invalid token" });
   }
