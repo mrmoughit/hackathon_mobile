@@ -184,12 +184,12 @@ router.get('/events', async (req, res) => {
 
 
 
-router.put('/events/Edit', async (req, res) => {
+router.put('/events/Edit', upload.single('image'), async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token)
-    return res.status(401).json("invalid token ");
+  if (!token) return res.status(401).json({ message: "Invalid token" });
 
+  // Destructure event details from the body (multer puts text fields here)
   const {
     title,
     description,
@@ -204,40 +204,43 @@ router.put('/events/Edit', async (req, res) => {
     event_id == null || title == null || description == null || location == null ||
     max_places == null || date == null || time == null
   ) {
-    return res.status(400).json("Missing required data");
+    return res.status(400).json({ message: "Missing required data" });
   }
+
   try {
-
-    const decoded =  jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
-    if(!check_if_admin(userLogin))
-      return res.status(401).json("not allowed to edit event");
 
-    const id = get_user_id(userLogin);
-    if (id == -1)
-      return res.status(500).json("internal server error");
-  
-    const query = `
-    UPDATE event
-    SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, date = ?
-    WHERE event_id = ? AND user_id = ?
-  `;
+    const isAdmin = await check_if_admin(userLogin);
+    if (!isAdmin) return res.status(403).json({ message: "Not allowed to edit event" });
 
-  await pool.query(query, [
-    title,
-    description,
-    location,
-    max_places,
-    time,
-    date,
-    event_id,
-    userId
-  ]);
+    const userId = await get_user_id(userLogin);
+    if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
-  res.status(200).json("Event updated successfully");
+    // If image is uploaded, get its path; otherwise null
+    const imagePath = req.file ? req.file.path : null;
 
-  }catch(err){
-    res.status(500).json("internal server error");
+    // Build query dynamically to update image only if provided
+    let query = `
+      UPDATE event
+      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, date = ?
+    `;
+    const params = [title, description, location, max_places, time, date];
+
+    if (imagePath) {
+      query += `, event_image = ? `;
+      params.push(imagePath);
+    }
+
+    query += ` WHERE event_id = ? AND user_id = ?`;
+    params.push(event_id, userId);
+
+    await pool.query(query, params);
+
+    res.status(200).json({ message: "Event updated successfully" });
+  } catch (err) {
+    console.error("Error editing event:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
