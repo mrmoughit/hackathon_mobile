@@ -215,8 +215,6 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   } = req.body;
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
-  console.log(image);
-  const [city, place_name] = location.split(' - ').map(part => part.trim());
 
   const eventDateTime = new Date(`${date}T${time}:00`);
 
@@ -224,8 +222,8 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     const conn = await pool.getConnection();
 
     const [locationRows] = await conn.execute(
-      'SELECT location_id FROM location WHERE city = ? AND place_name = ?',
-      [city, place_name]
+      'SELECT location_id FROM location WHERE place_name = ?',
+      [location]
     );
 
     let location_id;
@@ -233,8 +231,8 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
       location_id = locationRows[0].location_id;
     } else {
       const [insertLocation] = await conn.execute(
-        'INSERT INTO location (city, place_name) VALUES (?, ?)',
-        [city, place_name]
+        'INSERT INTO location (place_name) VALUES (?)',
+        [place_name]
       );
       location_id = insertLocation.insertId;
     }
@@ -244,12 +242,12 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        user_id,          // <== this now has a proper value
+        user_id,
         location_id,
         title,
         description,
         image,
-        maxPlaces,
+        max_places,
         60,
         eventDateTime
       ]
