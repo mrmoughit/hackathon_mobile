@@ -1,0 +1,56 @@
+import { Router } from 'express';
+import multer from 'multer';
+import path from 'path';
+import {pool} from './db.js';
+import jwt from 'jsonwebtoken';
+import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
+
+const user_router = Router();
+
+user_router.get('/user', async (req, res) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token)
+      return res.status(401).json("invalid token ");
+  
+    try {
+  
+      const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+  
+  
+      const userLogin = decoded.login;
+  
+      const [userRows] = await pool.query('SELECT * FROM users WHERE intra_login = ?', [userLogin]);
+      if (userRows.length === 0) return null;
+  
+      const result = userRows[0];
+  
+      if (result.role === 'admin' || result.role === 'organizer') {
+  
+  
+        const [events] = await pool.query('SELECT * FROM event WHERE user_id = ?', [result.id]);
+  
+        for (const event of events) {
+  
+          const [locations] = await pool.query('SELECT * FROM location WHERE location_id = ?', [event.location_id]);
+          event.location = locations.length > 0 ? locations[0] : null;
+  
+  
+          const [feedbacks] = await pool.query('SELECT * FROM feedback WHERE event_id = ?', [event.event_id]);
+          event.feedbacks = feedbacks;
+        }
+  
+        result.events = events;
+      }
+      res.status(200).json(result);
+      console.log(result);
+    } catch (error) {
+      res.status(500);
+      console.error('Error fetching user with events:', error);
+      throw error;
+    }
+  })
+
+
+export default user_router;

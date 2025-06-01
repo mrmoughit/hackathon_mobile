@@ -116,10 +116,6 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 
-
-
-
-
 router.get('/events', async (req, res) => {
 
 
