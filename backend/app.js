@@ -14,7 +14,7 @@ import jwt from 'jsonwebtoken';
 import { access } from 'fs';
 import { log } from 'console';
 import {create_new_user} from './help.js'
-const options = { expiresIn: '2h' };
+const options = { expiresIn: '5h' };
 
 dotenv.config();
 const app = express();
@@ -119,14 +119,16 @@ app.get('/user', async (req, res) => {
 
   console.log("here");
   
-  const token = req.headers['authorization'];
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
   if (!token)
     return res.status(401).json("invalid token ");
 
   try {
 
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded);
+
+
     const userLogin = decoded.login;
 
     const [userRows] = await pool.query('SELECT * FROM users WHERE intra_login = ?', [userLogin]);
