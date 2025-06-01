@@ -1,3 +1,5 @@
+import {pool} from './db.js'
+
 export async function create_new_user(login, img, full_name) {
     try {
       const [rows] = await pool.query('SELECT * FROM users WHERE intra_login = ?', [login]);
