@@ -245,7 +245,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        req.user.user_id,
+        user_id,
         location_id,
         title,
         description,
@@ -255,6 +255,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         eventDateTime
       ]
     );
+    
 
     conn.release();
     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
