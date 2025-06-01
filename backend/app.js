@@ -120,13 +120,13 @@ app.get('/user', async (req, res) => {
   console.log("here");
   
   const token = req.headers['authorization'];
-  console.log(token);
   if (!token)
     return res.status(401).json("invalid token ");
 
   try {
 
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded);
     const userLogin = decoded.login;
 
     const [userRows] = await pool.query('SELECT * FROM users WHERE intra_login = ?', [userLogin]);
