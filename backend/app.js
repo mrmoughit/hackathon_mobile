@@ -40,7 +40,7 @@ app.use(cors({
 
 
 app.use('/', routes);
-// app.use('/events', routes);
+
 
 
 passport.serializeUser((user, done) => done(null, user));

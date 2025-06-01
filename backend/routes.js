@@ -19,7 +19,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
-
 router.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
   let userLogin;
@@ -116,16 +115,16 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
 
 router.get('/events', async (req, res) => {
 
-  // const authHeader = req.headers['authorization'];
-  // const token = authHeader && authHeader.split(' ')[1];
-  // if (!token)
-  //   return res.status(401).json("invalid token");
-  // try {
-  //   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  //   const login = decoded.login;
-  // } catch (err) {
-  //   return res.status(401).json({ error: "Invalid token" });
-  // }
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const login = decoded.login;
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
 
   try {
       const [rows] = await pool.query(`
