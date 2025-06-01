@@ -185,28 +185,31 @@ router.get('/events', async (req, res) => {
 
 
 router.put('/events/Edit', upload.single('image'), async (req, res) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: "Invalid token" });
-
-  const {
-    title,
-    description,
-    location,
-    max_places,
-    date,
-    time,
-    event_id
-  } = req.body;
-
-  if (
-    event_id == null || title == null || description == null || location == null ||
-    max_places == null || date == null || time == null
-  ) {
-    return res.status(400).json({ message: "Missing required data" });
-  }
-
   try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ message: "Invalid token" });
+
+    // Destructure text fields from the body
+    const {
+      title,
+      description,
+      location,
+      max_places,
+      date,  // expected format: 'YYYY-MM-DD'
+      time,  // expected format: 'HH:mm:ss' or similar
+      event_id
+    } = req.body;
+
+    // Basic validation
+    if (
+      event_id == null || title == null || description == null || location == null ||
+      max_places == null || date == null || time == null
+    ) {
+      return res.status(400).json({ message: "Missing required data" });
+    }
+
+    // Verify token and get user info
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
@@ -216,13 +219,23 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
     const userId = await get_user_id(userLogin);
     if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
+    // Compose full datetime string for the event
+    // Assuming you want to combine date + time into one datetime column
+    const event_datetime = new Date(`${date}T${time}`);
+
+    if (isNaN(event_datetime.getTime())) {
+      return res.status(400).json({ message: "Invalid date or time format" });
+    }
+
+    // If image uploaded, get the path
     const imagePath = req.file ? req.file.path : null;
 
+    // Build the SQL query dynamically to update the image only if provided
     let query = `
       UPDATE event
-      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, event_date = ?
+      SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, event_datetime = ?
     `;
-    const params = [title, description, location, max_places, time, date];
+    const params = [title, description, location, max_places, event_datetime];
 
     if (imagePath) {
       query += `, event_image = ?`;
@@ -234,11 +247,11 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
 
     await pool.query(query, params);
 
-    res.status(200).json({ message: "Event updated successfully" });
+    return res.status(200).json({ message: "Event updated successfully" });
 
   } catch (err) {
     console.error("Error editing event:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
