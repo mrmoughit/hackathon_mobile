@@ -123,6 +123,9 @@ router.get('/events', async (req, res) => {
 
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+
+  console.log("token" , token);
+  
   if (!token)
     return res.status(401).json("invalid token");
   try {
