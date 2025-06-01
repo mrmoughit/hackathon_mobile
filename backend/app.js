@@ -83,9 +83,9 @@ app.get('/callback',
       const img = data.data.image.link;
 
       console.log(data);
-      // const full_name = data.data.full_name;  //
+      const full_name = data.data.usual_full_name;
 
-      // create_new_user(login , img , full_name);
+      create_new_user(login , img , full_name);
 
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -98,18 +98,18 @@ app.get('/callback',
 
     console.log(token);
 
-  //   const query = `
-  //   UPDATE users
-  //   SET token_intra = ? , token_2 = ?
-  //   WHERE login = ?
-  // `;
+    const query = `
+    UPDATE users
+    SET token_intra = ? , token_2 = ?
+    WHERE login = ?
+  `;
 
-  //   try {
-  //     const res = await pool.query(query, [token, accessToken, login]);
-  //   } catch (err) {
-  //     console.log(err);
-  //     return;
-  //   }
+    try {
+      const res = await pool.query(query, [token, accessToken, login]);
+    } catch (err) {
+      console.log(err);
+      return;
+    }
     // res.redirect(`http://${process.env._IP}:3000/?code=${token}`);
     res.redirect(`app0://auth/callback?token=${token}`); 
   }
