@@ -82,9 +82,8 @@ app.get('/callback',
       login = data.data.login;
       const img = data.data.image.link;
 
-      const full_name = data.data.full_name;  //
+      // const full_name = data.data.full_name;  //
 
-      
       create_new_user(login , img , full_name);
 
     } catch (error) {
@@ -96,19 +95,20 @@ app.get('/callback',
     const payload = { login: login };
     const token = jwt.sign(payload, process.env.JWT_SECRET, options);
 
-    const query = `
-    UPDATE users
-    SET token_intra = ? , token_2 = ?
-    WHERE login = ?
-  `;
+  //   const query = `
+  //   UPDATE users
+  //   SET token_intra = ? , token_2 = ?
+  //   WHERE login = ?
+  // `;
 
-    try {
-      const res = await pool.query(query, [token, accessToken, login]);
-    } catch (err) {
-      console.log(err);
-      return;
-    }
-    res.redirect(`http://${process.env._IP}:3000/?code=${token}`);
+  //   try {
+  //     const res = await pool.query(query, [token, accessToken, login]);
+  //   } catch (err) {
+  //     console.log(err);
+  //     return;
+  //   }
+    // res.redirect(`http://${process.env._IP}:3000/?code=${token}`);
+    res.redirect(`myapp://auth/callback?code=${token}`); 
   }
 );
 
