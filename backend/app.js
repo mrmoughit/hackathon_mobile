@@ -214,10 +214,11 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     time
   } = req.body;
 
-  console.log(date ,"  ===> ", time);
   const image = req.file ? `/uploads/${req.file.filename}` : null;
-
+  
   const eventDateTime = new Date(`${date}T${time}:00`);
+  console.log(date ,"  ===> ", time);
+  console.log(eventDateTime);
 
   try {
     const conn = await pool.getConnection();
