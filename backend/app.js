@@ -118,9 +118,9 @@ app.get('/callback',
 app.get('/user', async (req, res) => {
 
   console.log("here");
-  console.log(req.headers);
   
   const token = req.headers['authorization'];
+  console.log(token);
   if (!token)
     return res.status(401).json("invalid token ");
 
