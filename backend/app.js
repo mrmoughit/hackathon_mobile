@@ -198,7 +198,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     
-    user_id = rows[0].id;  // Correct column name and assign to outer variable
+    user_id = rows[0].id; 
     
   } catch (err) {
     console.error(err);
@@ -213,10 +213,9 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     date,
     time
   } = req.body;
-  console.log({  location, title, description, time, max_places, date });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
-
+  console.log(image);
   const [city, place_name] = location.split(' - ').map(part => part.trim());
 
   const eventDateTime = new Date(`${date}T${time}:00`);
