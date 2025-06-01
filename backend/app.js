@@ -182,31 +182,29 @@ const upload = multer({ storage });
 
 app.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
-  console.log({ user_id, location_id, title, description, image, maxPlaces, eventDateTime });
-  return ;
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token)
     return res.status(401).json("invalid token ");
-
+  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
-
+    
     const q = 'SELECT id FROM users WHERE intra_login = ?';
     const [rows] = await pool.query(q, [userLogin]);
-
+    
     if (rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    
     user_id = rows[0].id;  // Correct column name and assign to outer variable
-
+    
   } catch (err) {
     console.error(err);
     return res.status(401).json({ error: "Invalid token" });
   }
-
+  
   const {
     title,
     description,
@@ -215,6 +213,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     date,
     time
   } = req.body;
+  console.log({ user_id, location_id, title, description, image, maxPlaces, eventDateTime });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
