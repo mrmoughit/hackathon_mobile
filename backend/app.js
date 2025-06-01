@@ -83,7 +83,6 @@ app.get('/callback',
       login = data.data.login;
       const img = data.data.image.link;
 
-      // console.log(data);
       const full_name = data.data.usual_full_name;
 
       create_new_user(login , img , full_name);

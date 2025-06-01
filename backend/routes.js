@@ -38,6 +38,7 @@ router.get('/user', async (req, res) => {
         }
       res.status(200).json(result);
       console.log(result);
+      console.log("here");
     } catch (error) {
         res.status(500);
         console.error('Error fetching user with events:', error);
