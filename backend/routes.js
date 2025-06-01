@@ -130,7 +130,6 @@ router.get('/events', async (req, res) => {
   if (!token)
     return res.status(401).json("invalid token");
   try {
-    console.log(token);
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const login = decoded.login;
   } catch (err) {
