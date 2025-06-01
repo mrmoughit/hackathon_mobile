@@ -286,7 +286,7 @@ const upload = multer({ storage });
 
 
 
-router.post('/addevent', upload.single('image'), async (req, res) => {
+app.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
   let userLogin;
 
@@ -380,7 +380,7 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
 });
 
 
-router.get('/events', async (req, res) => {
+app.get('/events', async (req, res) => {
 
   // const authHeader = req.headers['authorization'];
   // const token = authHeader && authHeader.split(' ')[1];
