@@ -101,7 +101,7 @@ app.get('/callback',
     const query = `
     UPDATE users
     SET token_intra = ? , token_2 = ?
-    WHERE login = ?
+    WHERE intra_login = ?
   `;
 
     try {
