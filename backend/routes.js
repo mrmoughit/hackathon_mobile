@@ -113,6 +113,12 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
 });
 
 
+
+
+
+
+
+
 router.get('/events', async (req, res) => {
 
   const authHeader = req.headers['authorization'];
@@ -170,6 +176,112 @@ router.get('/events', async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+
+
+
+
+
+
+router.put('/events/Edit', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token ");
+
+  const {
+    title,
+    description,
+    location,
+    max_places,
+    date,
+    time
+  } = req.body;
+  if (
+    event_id == null || title == null || description == null || location == null ||
+    max_places == null || date == null || time == null
+  ) {
+    return res.status(400).json("Missing required data");
+  }
+  try {
+
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
+    if(!check_if_admin(userLogin))
+      return res.status(401).json("not allowed to edit event");
+
+    const id = get_user_id(userLogin);
+    if (id == -1)
+      return res.status(500).json("internal server error");
+  
+    const query = `
+    UPDATE event
+    SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, time = ?, date = ?
+    WHERE event_id = ? AND user_id = ?
+  `;
+
+  await pool.query(query, [
+    title,
+    description,
+    location,
+    max_places,
+    time,
+    date,
+    event_id,
+    userId
+  ]);
+
+  res.status(200).json("Event updated successfully");
+
+  }catch(err){
+    res.status(500).json("internal server error");
+  }
+});
+
+
+
+
+
+
+
+router.delete('/events/:event_id', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json("Invalid token");
+
+  const event_id = req.params.event_id;
+  if (!event_id) return res.status(400).json("Missing event ID");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
+
+    const isAdmin = await check_if_admin(userLogin);
+    if (!isAdmin) return res.status(403).json("Not allowed to delete event");
+
+    const userId = await get_user_id(userLogin);
+    if (userId === -1) return res.status(500).json("Internal server error");
+
+    const query = "DELETE FROM event WHERE event_id = ? AND user_id = ?";
+    pool.query(query, [event_id, userId], (err, result) => {
+      if (err) {
+        return res.status(500).json("Database error");
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json("Event not found or not owned by user");
+      }
+      return res.status(200).json("Deleted successfully");
+    });
+
+  } catch (err) {
+    res.status(500).json("Internal server error");
+  }
+});
+
+
+
+
 
 
 export default router;
