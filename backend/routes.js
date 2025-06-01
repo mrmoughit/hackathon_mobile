@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { getAccessToken, fetchData } from './oauth.js';
 
 const router = Router();
 
