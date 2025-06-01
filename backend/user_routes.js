@@ -115,6 +115,52 @@ user_router.post('/add/saved/event', async (req, res) => {
 });
 
 
+
+user_router.delete('/delete/saved/event', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Token missing or invalid" });
+    }
+
+    const event_id = req.body.event_id;
+    if (!event_id) {
+        return res.status(400).json({ error: "Missing event ID" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userLogin = decoded.login;
+
+        const id = await get_user_id(userLogin);
+        if (id === -1) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const [result] = await pool.query(
+            'DELETE FROM saved WHERE user_id = ? AND event_id = ?',
+            [id, event_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Saved event not found" });
+        }
+
+        return res.status(200).json({ message: "Saved event deleted successfully" });
+
+    } catch (error) {
+        console.error("Error in /delete/saved/event:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
+
+
+
+
 user_router.post('/add_registration', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
