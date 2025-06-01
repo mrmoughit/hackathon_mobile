@@ -128,11 +128,14 @@ user_router.post('/add_registration', async (req, res) => {
         return res.status(400).json({ error: "Missing event ID" });
     }
 
+    console.log(event_id);
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userLogin = decoded.login;
-
+        
         const id = await get_user_id(userLogin);
+        console.log(id);
+        console.log(userLogin);
         if (id === -1) {
             return res.status(404).json({ error: "User not found" });
         }
