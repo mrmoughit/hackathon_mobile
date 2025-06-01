@@ -206,7 +206,7 @@ router.put('/events/Edit', async (req, res) => {
   }
   try {
 
-    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    const decoded =  jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
     if(!check_if_admin(userLogin))
       return res.status(401).json("not allowed to edit event");
@@ -245,12 +245,15 @@ router.put('/events/Edit', async (req, res) => {
 
 
 
-router.delete('/events/:event_id', async (req, res) => {
+router.delete('/events_delete', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json("Invalid token");
 
   const event_id = req.body.event_id;
+
+
+  console.log(event_id);
   if (!event_id) return res.status(400).json("Missing event ID");
 
   try {
