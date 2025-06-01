@@ -232,7 +232,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     return res.status(400).json("Missing required data");
   }
 
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  const image = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
   const time24h = convert_houre(time);
   const eventDateTime = new Date(`${date}T${time24h}`);
 
