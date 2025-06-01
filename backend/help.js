@@ -16,7 +16,7 @@ export async function create_new_user(login, img, full_name) {
 
 
 
-  function convert_houre(timeString) {
+  export function convert_houre(timeString) {
     const [time, modifier] = timeString.split(" ");
 
     if (!time || !modifier) {
@@ -35,6 +35,7 @@ export async function create_new_user(login, img, full_name) {
 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
+
 
 
   export async function check_if_admin(login) {
