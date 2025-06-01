@@ -84,7 +84,7 @@ app.get('/callback',
 
       // const full_name = data.data.full_name;  //
 
-      create_new_user(login , img , full_name);
+      // create_new_user(login , img , full_name);
 
     } catch (error) {
       console.error("Error fetching data:", error);
