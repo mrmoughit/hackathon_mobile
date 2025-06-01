@@ -192,7 +192,6 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
   let userLogin;
 
-  // 1. Verify Token
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json("Invalid token");
@@ -201,7 +200,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     userLogin = decoded.login;
 
-    user_id = await get_user_id(userLogin); // ✅ Await and no const
+    user_id = await get_user_id(userLogin); 
     if (!user_id || user_id === 0)
       return res.status(500).json({ error: "Internal server error: user not found" });
 
@@ -210,12 +209,11 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     return res.status(401).json({ error: "Invalid token" });
   }
 
-  // 2. Check Admin Rights
-  const isAdmin = await check_if_admin(userLogin); // ✅ Await admin check
+  const isAdmin = await check_if_admin(userLogin); 
   if (!isAdmin)
     return res.status(403).json("Not allowed to add event");
 
-  // 3. Validate Input
+
   const {
     title,
     description,
@@ -241,7 +239,6 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   try {
     conn = await pool.getConnection();
 
-    // 4. Find or Create Location
     const [locationRows] = await conn.execute(
       'SELECT location_id FROM location WHERE place_name = ?',
       [location]
@@ -258,7 +255,6 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
       location_id = insertLocation.insertId;
     }
 
-    // 5. Insert Event
     const [insertEvent] = await conn.execute(
       `INSERT INTO event 
         (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
@@ -270,7 +266,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         description,
         image,
         max_places,
-        60, // Hardcoded duration in minutes
+        60, 
         eventDateTime
       ]
     );
@@ -281,7 +277,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     console.error('Error creating event:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   } finally {
-    if (conn) conn.release(); // ✅ Always release connection
+    if (conn) conn.release(); 
   }
 });
 
@@ -292,16 +288,16 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 app.get('/events', async (req, res) => {
 
-  // const authHeader = req.headers['authorization'];
-  // const token = authHeader && authHeader.split(' ')[1];
-  // if (!token)
-  //   return res.status(401).json("invalid token");
-  // try {
-  //   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  //   const login = decoded.login;
-  // } catch (err) {
-  //   return res.status(401).json({ error: "Invalid token" });
-  // }
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const login = decoded.login;
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
 
   try {
       const [rows] = await pool.query(`
