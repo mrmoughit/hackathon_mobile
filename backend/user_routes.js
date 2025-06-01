@@ -62,7 +62,6 @@ user_router.get('/get/saved/event', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: "Token missing or invalid" });
     }
-
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userLogin = decoded.login;
@@ -110,6 +109,39 @@ user_router.post('/add/saved/event', async (req, res) => {
 
     } catch (error) {
         console.error("Error in /add/saved/event:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+user_router.get('/is_saved', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Token missing or invalid" });
+    }
+
+    const event_id = req.body.event_id;
+    if (!event_id) return res.status(400).json({ error: "Missing event ID" });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userLogin = decoded.login;
+
+        const id = await get_user_id(userLogin);
+        if (id === -1) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const [rows] = await pool.query('SELECT 1 FROM saved WHERE user_id = ? AND event_id = ?', [id, event_id]);
+        
+        const is_registered = rows.length > 0;
+
+        res.status(200).json({ is_registered });
+
+    } catch (error) {
+        console.error("Error in /check/registered/event:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
