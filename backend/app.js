@@ -216,7 +216,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   
-  const time24h = convertTo24Hour(time);
+  const time24h = convert_houre(time);
   const eventDateTime = new Date(`${date}T${time24h}`);
   console.log(date ,"  ===> ", time);
   console.log(eventDateTime);
