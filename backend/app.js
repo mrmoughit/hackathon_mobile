@@ -177,7 +177,7 @@ const upload = multer({ storage });
 
 
 
-app.post('/addevent', authenticateToken, upload.single('image'), async (req, res) => {
+app.post('/addevent', upload.single('image'), async (req, res) => {
 
   var user_id;
   const authHeader = req.headers['authorization'];
