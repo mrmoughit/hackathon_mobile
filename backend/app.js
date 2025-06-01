@@ -214,6 +214,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     time
   } = req.body;
 
+  console.log(date ,"  ===> ", time);
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
   const eventDateTime = new Date(`${date}T${time}:00`);
