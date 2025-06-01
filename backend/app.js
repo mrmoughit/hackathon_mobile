@@ -267,4 +267,52 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 
+
+
+app.get('/events', async (req, res) => {
+  try {
+      const [rows] = await db.query(`
+          SELECT 
+              e.event_id,
+              e.user_id,
+              e.event_title,
+              e.time,
+              e.number_places_available,
+              e.duration,
+              e.event_description,
+              e.event_image,
+              l.location_id,
+              l.city,
+              l.place_name,
+              COUNT(r.id) AS number_of_registrations
+          FROM event e
+          LEFT JOIN location l ON e.location_id = l.location_id
+          LEFT JOIN registration r ON e.event_id = r.event_id
+          GROUP BY e.event_id
+      `);
+
+      const events = rows.map(row => ({
+          event_id: row.event_id,
+          user_id: row.user_id,
+          event_title: row.event_title,
+          time: row.time,
+          number_places_available: row.number_places_available,
+          duration: row.duration,
+          event_description: row.event_description,
+          event_image: row.event_image,
+          location: {
+              location_id: row.location_id,
+              city: row.city,
+              place_name: row.place_name
+          },
+          number_of_registrations: row.number_of_registrations
+      }));
+
+      res.json(events);
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
