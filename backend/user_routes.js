@@ -123,6 +123,9 @@ user_router.get('/is_saved', async (req, res) => {
     }
 
     const event_id = req.query.event_id; 
+
+    console.log(event_id);
+    console.log(req.query);
     if (!event_id) return res.status(400).json({ error: "Missing event ID" });
 
     try {
