@@ -122,7 +122,7 @@ user_router.get('/is_saved', async (req, res) => {
         return res.status(401).json({ error: "Token missing or invalid" });
     }
 
-    const event_id = req.body.event_id;
+    const event_id = req.query.event_id; 
     if (!event_id) return res.status(400).json({ error: "Missing event ID" });
 
     try {
