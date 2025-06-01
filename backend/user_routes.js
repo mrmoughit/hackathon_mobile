@@ -116,6 +116,7 @@ user_router.post('/add/saved/event', async (req, res) => {
 
 
 user_router.post('/add_registration', async (req, res) => {
+    console.log("herererer");
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
