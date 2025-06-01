@@ -13,7 +13,7 @@ import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import { access } from 'fs';
 import { log } from 'console';
-import { create_new_user } from './help.js'
+import { create_new_user  , convert_houre} from './help.js'
 import multer from 'multer';
 import path from 'path';
 
@@ -216,7 +216,8 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   
-  const eventDateTime = new Date(`${date}T${time}:00`);
+  const time24h = convertTo24Hour(time);
+  const eventDateTime = new Date(`${date}T${time24h}`);
   console.log(date ,"  ===> ", time);
   console.log(eventDateTime);
 
