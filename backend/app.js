@@ -188,6 +188,97 @@ const upload = multer({ storage });
 
 
 
+app.post('/addevent', upload.single('image'), async (req, res) => {
+  let user_id;
+  let userLogin;
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token ");
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    userLogin = decoded.login;
+    
+    const user_id = get_user_id(userLogin);
+    if (user_id === 0)
+      return res.status(500).json({ error: "internal server error" });
+    
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+
+  if (!check_if_admin(userLogin))
+      return res.status(401).json("not allowed to add event");
+  const {
+    title,
+    description,
+    location,
+    max_places,
+    date,
+    time
+  } = req.body;
+
+  if (
+     title == null || description == null || location == null ||
+    max_places == null || date == null || time == null
+  ) {
+    return res.status(400).json("Missing required data");
+  }
+  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  
+  const time24h = convert_houre(time);
+  const eventDateTime = new Date(`${date}T${time24h}`);
+
+
+  try {
+    const conn = await pool.getConnection();
+
+    const [locationRows] = await conn.execute(
+      'SELECT location_id FROM location WHERE place_name = ?',
+      [location]
+    );
+
+    let location_id;
+    if (locationRows.length > 0) {
+      location_id = locationRows[0].location_id;
+    } else {
+      const [insertLocation] = await conn.execute(
+        'INSERT INTO location (place_name) VALUES (?)',
+        [location]
+      );
+      location_id = insertLocation.insertId;
+    }
+
+    const [insertEvent] = await conn.execute(
+      `INSERT INTO event 
+        (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user_id,
+        location_id,
+        title,
+        description,
+        image,
+        max_places,
+        60,
+        eventDateTime
+      ]
+    );
+
+    conn.release();
+    res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
+
+  } catch (err) {
+    console.error('Error creating event:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+
 
 
 app.get('/events', async (req, res) => {
