@@ -14,6 +14,8 @@ import jwt from 'jsonwebtoken';
 import { access } from 'fs';
 import { log } from 'console';
 import { create_new_user } from './help.js'
+import multer from 'multer';
+
 const options = { expiresIn: '5h' };
 
 dotenv.config();
