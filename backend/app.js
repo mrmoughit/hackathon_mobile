@@ -177,7 +177,7 @@ app.get('/user', async (req, res) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, '/var/www/html/uploads');
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
@@ -226,7 +226,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   ) {
     return res.status(400).json("Missing required data");
   }
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  const image = req.file ? `/var/www/html/uploads/${req.file.filename}` : null;
   
   const time24h = convert_houre(time);
   const eventDateTime = new Date(`${date}T${time24h}`);
@@ -282,16 +282,16 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 app.get('/events', async (req, res) => {
 
-  // const authHeader = req.headers['authorization'];
-  // const token = authHeader && authHeader.split(' ')[1];
-  // if (!token)
-  //   return res.status(401).json("invalid token");
-  // try {
-  //   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  //   const login = decoded.login;
-  // } catch (err) {
-  //   return res.status(401).json({ error: "Invalid token" });
-  // }
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const login = decoded.login;
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
 
   try {
       const [rows] = await pool.query(`
