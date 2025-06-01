@@ -190,6 +190,7 @@ const upload = multer({ storage });
 
 app.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
+  let userLogin;
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token)
@@ -197,7 +198,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userLogin = decoded.login;
+    userLogin = decoded.login;
     
     const user_id = get_user_id(userLogin);
     if (user_id === 0)
