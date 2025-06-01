@@ -270,6 +270,18 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 app.get('/events', async (req, res) => {
+
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token)
+    return res.status(401).json("invalid token");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const login = decoded.login;
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
   try {
       const [rows] = await pool.query(`
           SELECT 
