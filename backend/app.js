@@ -182,6 +182,8 @@ const upload = multer({ storage });
 
 app.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
+  console.log({ user_id, location_id, title, description, image, maxPlaces, eventDateTime });
+  return ;
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token)
