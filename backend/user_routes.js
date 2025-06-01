@@ -71,7 +71,7 @@ user_router.get('/get/saved/event', async (req, res) => {
             return res.status(500).json({ error: "User not found" });
         }
 
-        const [events] = await pool.query('SELECT * FROM event WHERE user_id = ?', [id]);
+        const [events] = await pool.query('SELECT * FROM saved WHERE user_id = ?', [id]);
         res.status(200).json(events);
 
     } catch (error) {
