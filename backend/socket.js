@@ -1,11 +1,10 @@
-// socket.js
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'socket.io';
 
 const clients = new Set();
 
 export function initSockets(server, pool) {
-  // Setup Socket.IO
+
   const io = new Server(server, {
     cors: {
       origin: '*',
@@ -20,10 +19,9 @@ export function initSockets(server, pool) {
     });
   });
 
-  // Setup WebSocket Server
+
   const wss = new WebSocketServer({ noServer: true });
 
-  // Upgrade HTTP server requests to WS if URL matches
   server.on('upgrade', (request, socket, head) => {
     if (request.url === '/ws') {
       wss.handleUpgrade(request, socket, head, (ws) => {
@@ -49,7 +47,7 @@ export function initSockets(server, pool) {
     });
   });
 
-  function sendNotification(username, message) {
+  export function sendNotification(username, message) {
     const payload = JSON.stringify({ type: 'notification', username, message });
     console.log('Sending to clients:', payload);
 
@@ -63,6 +61,5 @@ export function initSockets(server, pool) {
     });
   }
 
-  // Return objects or functions you want to use elsewhere
   return { io, wss, sendNotification };
 }
