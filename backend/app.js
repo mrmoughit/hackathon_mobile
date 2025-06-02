@@ -58,6 +58,7 @@ io.on('connection', (socket) => {
 
 // Function to send notification to all connected clients
 function sendNotification(username, message) {
+  console.log("send" , message);
   io.emit('notification', { username, message });
 }
 
