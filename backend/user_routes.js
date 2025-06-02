@@ -182,44 +182,48 @@ user_router.get('/is_saved', async (req, res) => {
 
 
 
-user_router.delete('/delete/saved/event', async (req, res) => {
+user_router.delete('/delete/event', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
+  
     if (!token) {
-        return res.status(401).json({ error: "Token missing or invalid" });
+      return res.status(401).json({ error: "Token missing or invalid" });
     }
-
+  
     const event_id = req.body.event_id;
     if (!event_id) {
-        return res.status(400).json({ error: "Missing event ID" });
+      return res.status(400).json({ error: "Missing event ID" });
     }
-
+  
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const userLogin = decoded.login;
-
-        const id = await get_user_id(userLogin);
-        if (id === -1) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        const [result] = await pool.query(
-            'DELETE FROM saved WHERE user_id = ? AND event_id = ?',
-            [id, event_id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "Saved event not found" });
-        }
-
-        return res.status(200).json({ message: "Saved event deleted successfully" });
-
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userLogin = decoded.login;
+  
+      const userId = await get_user_id(userLogin);
+      if (userId === -1) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      // Optional: check if user has permission to delete event here
+  
+      // Step 1: Delete related saved entries first
+      await pool.query('DELETE FROM saved WHERE event_id = ?', [event_id]);
+  
+      // Step 2: Delete the event itself
+      const [result] = await pool.query('DELETE FROM event WHERE event_id = ?', [event_id]);
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+  
+      return res.status(200).json({ message: "Event and saved references deleted successfully" });
+  
     } catch (error) {
-        console.error("Error in /delete/saved/event:", error);
-        return res.status(500).json({ error: "Internal server error" });
+      console.error("Error deleting event:", error);
+      return res.status(500).json({ error: "Internal server error" });
     }
-});
+  });
+  
 
 
 
