@@ -23,7 +23,8 @@ const clients = new Set();
 
 const app = express();
 
-
+app.use('/', routes);
+app.use('/', user_routes)
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: '*', credentials: true }));
