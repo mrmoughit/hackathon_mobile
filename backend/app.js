@@ -14,8 +14,7 @@ import jwt from 'jsonwebtoken';
 import { Server } from 'socket.io';
 import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
-import routes from './event_routes.js';
-import user_routes from './user_routes.js';
+
 import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
 
 dotenv.config();
@@ -24,7 +23,8 @@ const options = { expiresIn: '5h' };
 const clients = new Set();
 
 const app = express();
-
+app.use('/', routes);
+app.use('/', user_routes);
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: '*', credentials: true }));
@@ -91,8 +91,7 @@ function sendNotification(username, message) {
     }
   });
 }
-app.use('/', routes);
-app.use('/', user_routes)
+
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
@@ -147,8 +146,7 @@ app.use(cors({
   methods: ["GET", "POST"],
 }));
 
-app.use('/', routes);
-app.use('/', user_routes);
+
 
 app.post('/events_finish', async (req, res) => {
   const authHeader = req.headers['authorization'];
