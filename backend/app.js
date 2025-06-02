@@ -11,7 +11,6 @@ import http from 'http';
 import routes from './event_routes.js';
 import user_routes from './user_routes.js';
 import jwt from 'jsonwebtoken';
-import { create_new_user, check_if_admin, get_user_id } from './help.js';
 import { Server } from 'socket.io';
 import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
