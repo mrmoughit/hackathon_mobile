@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 
 const clients = new Set();
 
-export function initSockets(server, pool) {
+function initSockets(server, pool) {
 
   const io = new Server(server, {
     cors: {
@@ -18,7 +18,6 @@ export function initSockets(server, pool) {
       console.log('User disconnected:', socket.id);
     });
   });
-
 
   const wss = new WebSocketServer({ noServer: true });
 
@@ -47,7 +46,7 @@ export function initSockets(server, pool) {
     });
   });
 
-   function sendNotification(username, message) {
+  function sendNotification(username, message) {
     const payload = JSON.stringify({ type: 'notification', username, message });
     console.log('Sending to clients:', payload);
 
@@ -64,4 +63,4 @@ export function initSockets(server, pool) {
   return { io, wss, sendNotification };
 }
 
-module.exports = { initSockets , sendNotification };
+export { initSockets };
