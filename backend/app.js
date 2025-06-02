@@ -79,10 +79,14 @@ wss.on('connection', (ws) => {
 
 function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
-  console.log(payload);
+  console.log('Sending to clients:', payload);
+
   clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(payload);
+      console.log('Sent to client');
+    } else {
+      console.log('Skipped client: not open');
     }
   });
 }
