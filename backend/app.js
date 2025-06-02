@@ -565,6 +565,7 @@ app.delete('/delete/saved/event', async (req, res) => {
     return res.status(401).json({ error: "Token missing or invalid" });
   }
 
+  console.log(req.body);
   const event_id = req.body.event_id;
   
   if (!event_id) {
