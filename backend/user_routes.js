@@ -26,7 +26,6 @@ user_router.get('/user', async (req, res) => {
             const [events] = await pool.query('SELECT * FROM event WHERE user_id = ?', [result.id]);
 
             for (const event of events) {
-                // Get location
                 const [locations] = await pool.query('SELECT * FROM location WHERE location_id = ?', [event.location_id]);
                 event.location = locations.length > 0 ? locations[0] : null;
 
@@ -113,9 +112,6 @@ user_router.get('/get/saved/event', async (req, res) => {
 });
 
 
-
-
-
 user_router.post('/add/saved/event', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -190,6 +186,8 @@ user_router.delete('/delete/event', async (req, res) => {
     }
   
     const event_id = req.body.event_id;
+    console.log(req.body.event_id);
+    
     if (!event_id) {
       return res.status(400).json({ error: "Missing event ID" });
     }
