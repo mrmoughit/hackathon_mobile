@@ -78,7 +78,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Send notification to all connected Socket.IO clients
+
 // export function sendNotification(username, message) {
 //   console.log("Sending notification:", { username, message });
 //   io.emit('notification', { username, message });
@@ -87,11 +87,11 @@ wss.on('connection', (ws) => {
 
 function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
-  wss.clients.forEach((client) => {
-    if (client.readyState === wss.OPEN) {
-      client.send(payload);
-    }
-  });
+  ws.send(JSON.stringify({
+    type: 'notification',
+    username: username,
+    message: message,
+  }));
 }
 // Passport config (unchanged)
 passport.serializeUser((user, done) => done(null, user));
