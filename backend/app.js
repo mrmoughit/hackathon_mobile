@@ -18,7 +18,7 @@ import { Server } from 'socket.io';
 dotenv.config();
 
 const options = { expiresIn: '5h' };
-
+const clients = new Set();
 const app = express();
 
 app.use(cookieParser());
