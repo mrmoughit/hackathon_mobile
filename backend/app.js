@@ -65,25 +65,36 @@ io.on('connection', (socket) => {
 
 // WebSocket (ws) connection handler (if you use ws clients)
 wss.on('connection', (ws) => {
-  console.log('Raw WebSocket client connected');
+  console.log('Client connected');
 
-  ws.on('message', (message) => {
-    console.log('Received WS message:', message);
-    // Echo example or handle messages from ws clients here
-    ws.send(`Server received: ${message}`);
-  });
+  // Send a test notification after connecting
+  ws.send(JSON.stringify({
+    type: 'notification',
+    username: 'admin',
+    message: 'Welcome to WebSocket!',
+  }));
+});
 
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
-  });
 });
 
-// Send notification to all connected Socket.IO clients
-export function sendNotification(username, message) {
-  console.log("Sending notification:", { username, message });
-  io.emit('notification', { username, message });
-}
 
+// Send notification to all connected Socket.IO clients
+// export function sendNotification(username, message) {
+//   console.log("Sending notification:", { username, message });
+//   io.emit('notification', { username, message });
+// }
+
+
+function sendNotification(username, message) {
+  const payload = JSON.stringify({ type: 'notification', username, message });
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+}
 // Passport config (unchanged)
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
