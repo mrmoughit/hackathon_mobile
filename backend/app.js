@@ -14,6 +14,7 @@ import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import { create_new_user, check_if_admin, get_user_id } from './help.js';
 import { Server } from 'socket.io';
+import { WebSocketServer, WebSocket } from 'ws';
 
 dotenv.config();
 
