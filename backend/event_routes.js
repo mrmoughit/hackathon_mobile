@@ -4,9 +4,70 @@ import path from 'path';
 import {pool} from './db.js';
 import jwt from 'jsonwebtoken';
 import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
+import { Server } from 'socket.io';
+import { WebSocketServer, WebSocket } from 'ws';
 
-
+const clients = new Set();
 const router = Router();
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+  if (request.url === '/ws') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+wss.on('connection', (ws) => {
+  console.log('Raw WebSocket client connected');
+  clients.add(ws);  
+  
+  
+  
+  ws.on('close', () => {
+    console.log('Raw WebSocket client disconnected');
+    clients.delete(ws);  
+  });
+  
+  ws.on('error', (err) => {
+    console.error('WebSocket error:', err);
+    clients.delete(ws);  
+  });
+});
+
+function sendNotification(username, message) {
+  const payload = JSON.stringify({ type: 'notification', username, message });
+  console.log('Sending to clients:', payload);
+
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+      console.log('Sent to client');
+    } else {
+      console.log('Skipped client: not open');
+    }
+  });
+}
 
 
 
