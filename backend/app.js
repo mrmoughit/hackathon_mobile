@@ -153,8 +153,8 @@ app.post('/events_finish', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
-    // Send notification on event finish
-    sendNotification(userLogin, "hello avatar");
+    
+    await sendNotification(userLogin, "hello avatar");
 
     const isAdmin = await check_if_admin(userLogin);
     if (!isAdmin) return res.status(403).json({ message: "Not allowed to finish event" });
