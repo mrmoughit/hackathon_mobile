@@ -23,8 +23,6 @@ const clients = new Set();
 
 const app = express();
 
-app.use('/', routes);
-app.use('/', user_routes)
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: '*', credentials: true }));
@@ -81,7 +79,7 @@ wss.on('connection', (ws) => {
 function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
   console.log('Sending to clients:', payload);
-
+  
   clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(payload);
@@ -91,6 +89,8 @@ function sendNotification(username, message) {
     }
   });
 }
+app.use('/', routes);
+app.use('/', user_routes)
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
