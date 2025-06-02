@@ -10,7 +10,6 @@ import dotenv from 'dotenv';
 import http from 'http';
 import routes from './event_routes.js';
 import user_routes from './user_routes.js';
-// import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import { create_new_user, check_if_admin, get_user_id } from './help.js';
 import { Server } from 'socket.io';
@@ -63,11 +62,11 @@ wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
   clients.add(ws);  // Add client on connection
 
-  ws.send(JSON.stringify({
-    type: 'notification',
-    username: 'admin',
-    message: 'Welcome to WebSocket!',
-  }));
+  // ws.send(JSON.stringify({
+  //   type: 'notification',
+  //   username: 'admin',
+  //   message: 'Welcome to WebSocket!',
+  // }));
 
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
