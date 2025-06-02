@@ -174,6 +174,17 @@ app.post('/events_finish', async (req, res) => {
 });
 
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, '/var/www/html/uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
 app.post('/addevent', upload.single('image'), async (req, res) => {
   let user_id;
   let userLogin;
