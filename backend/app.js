@@ -82,17 +82,18 @@ wss.on('connection', async (ws, request) => {
       return;
     }
 
-    const user_id = rows[0].id;
+    const user_id = String(rows[0].id);
+    console.log(`Registering socket for user_id: ${user_id}`);
 
     clients_socket.set(user_id, ws);
 
     ws.on('close', () => {
-      console.log('Raw WebSocket client disconnected');
+      console.log(`Raw WebSocket client disconnected: user_id ${user_id}`);
       clients_socket.delete(user_id);
     });
 
     ws.on('error', (err) => {
-      console.error('WebSocket error:', err);
+      console.error(`WebSocket error: user_id ${user_id}`, err);
       clients_socket.delete(user_id);
     });
 
@@ -110,10 +111,11 @@ wss.on('connection', async (ws, request) => {
 
 
 async function sendNotification(username, message) {
-  const user_id = await get_user_id(username);
-  if (user_id === -1) return;
+  const user_id = String(await get_user_id(username));
+  if (user_id === '-1') return;
 
   const ws = clients_socket.get(user_id);
+
   if (ws && ws.readyState === WebSocket.OPEN) {
     const payload = JSON.stringify({ type: 'notification', username, message });
     ws.send(payload);
