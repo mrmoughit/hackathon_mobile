@@ -782,7 +782,7 @@ app.delete('/delete_register', async (req, res) => {
 
 
 
-router.delete('/events_delete', async (req, res) => {
+app.delete('/events_delete', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ message: "Invalid token" });
@@ -822,98 +822,97 @@ router.delete('/events_delete', async (req, res) => {
 
 
 
-app.post('/addevent', upload.single('image'), async (req, res) => {
-  let user_id;
-  let userLogin;
+// app.post('/addevent', upload.single('image'), async (req, res) => {
+//   let user_id;
+//   let userLogin;
 
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json("Invalid token");
+//   const authHeader = req.headers['authorization'];
+//   const token = authHeader && authHeader.split(' ')[1];
+//   if (!token) return res.status(401).json("Invalid token");
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    userLogin = decoded.login;
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     userLogin = decoded.login;
 
-    user_id = await get_user_id(userLogin); 
-    if (!user_id || user_id === 0)
-      return res.status(500).json({ error: "Internal server error: user not found" });
+//     user_id = await get_user_id(userLogin); 
+//     if (!user_id || user_id === 0)
+//       return res.status(500).json({ error: "Internal server error: user not found" });
 
-  } catch (err) {
-    console.error("JWT or user_id error:", err);
-    return res.status(401).json({ error: "Invalid token" });
-  }
+//   } catch (err) {
+//     console.error("JWT or user_id error:", err);
+//     return res.status(401).json({ error: "Invalid token" });
+//   }
 
-  const isAdmin = await check_if_admin(userLogin); 
-  if (!isAdmin)
-    return res.status(403).json("Not allowed to add event");
+//   const isAdmin = await check_if_admin(userLogin); 
+//   if (!isAdmin)
+//     return res.status(403).json("Not allowed to add event");
 
 
-  const {
-    title,
-    description,
-    location,
-    max_places,
-    date,
-    time
-  } = req.body;
+//   const {
+//     title,
+//     description,
+//     location,
+//     max_places,
+//     date,
+//     time
+//   } = req.body;
 
-  if (
-    title == null || description == null || location == null ||
-    max_places == null || date == null || time == null
-  ) {
-    return res.status(400).json("Missing required data");
-  }
+//   if (
+//     title == null || description == null || location == null ||
+//     max_places == null || date == null || time == null
+//   ) {
+//     return res.status(400).json("Missing required data");
+//   }
 
-  const image = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
-  const time24h = convert_houre(time);
-  const eventDateTime = new Date(`${date}T${time24h}`);
+//   const image = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
+//   const time24h = convert_houre(time);
+//   const eventDateTime = new Date(`${date}T${time24h}`);
 
-  let conn;
+//   let conn;
 
-  try {
-    conn = await pool.getConnection();
+//   try {
+//     conn = await pool.getConnection();
 
-    const [locationRows] = await conn.execute(
-      'SELECT location_id FROM location WHERE place_name = ?',
-      [location]
-    );
+//     const [locationRows] = await conn.execute(
+//       'SELECT location_id FROM location WHERE place_name = ?',
+//       [location]
+//     );
 
-    let location_id;
-    if (locationRows.length > 0) {
-      location_id = locationRows[0].location_id;
-    } else {
-      const [insertLocation] = await conn.execute(
-        'INSERT INTO location (place_name) VALUES (?)',
-        [location]
-      );
-      location_id = insertLocation.insertId;
-    }
+//     let location_id;
+//     if (locationRows.length > 0) {
+//       location_id = locationRows[0].location_id;
+//     } else {
+//       const [insertLocation] = await conn.execute(
+//         'INSERT INTO location (place_name) VALUES (?)',
+//         [location]
+//       );
+//       location_id = insertLocation.insertId;
+//     }
 
-    const [insertEvent] = await conn.execute(
-      `INSERT INTO event 
-        (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        user_id,
-        location_id,
-        title,
-        description,
-        image,
-        max_places,
-        60, 
-        eventDateTime
-      ]
-    );
-    // await sendNotification(userLogin, "hello avatar");
-    res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
+//     const [insertEvent] = await conn.execute(
+//       `INSERT INTO event 
+//         (user_id, location_id, event_title, event_description, event_image, number_places_available, duration, time) 
+//        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         user_id,
+//         location_id,
+//         title,
+//         description,
+//         image,
+//         max_places,
+//         60, 
+//         eventDateTime
+//       ]
+//     );
+//     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
 
-  } catch (err) {
-    console.error('Error creating event:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  } finally {
-    if (conn) conn.release(); 
-  }
-});
+//   } catch (err) {
+//     console.error('Error creating event:', err);
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   } finally {
+//     if (conn) conn.release(); 
+//   }
+// });
 
 const PORT = process.env.PORT || 3000;
 
