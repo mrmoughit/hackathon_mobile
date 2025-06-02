@@ -309,7 +309,7 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
         eventDateTime
       ]
     );
-    await sendNotification(userLogin, "hello avatar");
+    // await sendNotification(userLogin, "hello avatar");
     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
 
   } catch (err) {
