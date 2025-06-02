@@ -28,28 +28,27 @@ app.use(session({ secret: 'abechcha', resave: false, saveUninitialized: false })
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Single HTTP server instance
+
 const server = http.createServer(app);
 
-// Socket.IO setup (handles all upgrade requests except /ws)
+
 const io = new Server(server, {
   cors: {
     origin: '*',
   },
 });
 
-// Raw WebSocket server, only for /ws path
+
 const wss = new WebSocketServer({ noServer: true });
 
-// Handle HTTP upgrade to WS
+
 server.on('upgrade', (request, socket, head) => {
   if (request.url === '/ws') {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request);
     });
   } else {
-    // Let Socket.IO handle upgrade on other URLs
-    // If not socket.io URL, destroy socket
+
     socket.destroy();
   }
 });
@@ -63,7 +62,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// WebSocket (ws) connection handler (if you use ws clients)
+
 wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
 
@@ -80,6 +79,7 @@ wss.on('connection', (ws) => {
 
 function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
+  console.log(payload);
   clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(payload);
