@@ -12,9 +12,8 @@ import routes from './event_routes.js';
 import user_routes from './user_routes.js';
 import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
-import { create_new_user } from './help.js';
+import { create_new_user, check_if_admin, get_user_id } from './help.js';
 import { Server } from 'socket.io';
-import {check_if_admin, get_user_id } from './help.js';
 
 dotenv.config();
 
@@ -29,26 +28,33 @@ app.use(session({ secret: 'abechcha', resave: false, saveUninitialized: false })
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Create HTTP server only once
+// Single HTTP server instance
 const server = http.createServer(app);
 
-// Setup Socket.IO with the same server
+// Socket.IO setup (handles all upgrade requests except /ws)
 const io = new Server(server, {
   cors: {
     origin: '*',
   },
 });
 
-let accessToken = "";
+// Raw WebSocket server, only for /ws path
+const wss = new WebSocketServer({ noServer: true });
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-}));
+// Handle HTTP upgrade to WS
+server.on('upgrade', (request, socket, head) => {
+  if (request.url === '/ws') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    // Let Socket.IO handle upgrade on other URLs
+    // If not socket.io URL, destroy socket
+    socket.destroy();
+  }
+});
 
-app.use('/', routes);
-app.use('/', user_routes);
-
+// Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -57,30 +63,28 @@ io.on('connection', (socket) => {
   });
 });
 
-// Function to send notification to all connected clients
-function sendNotification(username, message) {
-  console.log("send" , message);
+// WebSocket (ws) connection handler (if you use ws clients)
+wss.on('connection', (ws) => {
+  console.log('Raw WebSocket client connected');
+
+  ws.on('message', (message) => {
+    console.log('Received WS message:', message);
+    // Echo example or handle messages from ws clients here
+    ws.send(`Server received: ${message}`);
+  });
+
+  ws.on('close', () => {
+    console.log('Raw WebSocket client disconnected');
+  });
+});
+
+// Send notification to all connected Socket.IO clients
+export function sendNotification(username, message) {
+  console.log("Sending notification:", { username, message });
   io.emit('notification', { username, message });
 }
 
-
-// const wss = new WebSocketServer({ server });
-
-const wss = new WebSocketServer({ noServer: true });
-
-server.on('upgrade', (request, socket, head) => {
-  // For example, only handle upgrade requests on /ws path by ws:
-  if (request.url === '/ws') {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
-    });
-  } else {
-    // Let socket.io handle other upgrade requests
-    socket.destroy();
-  }
-});
-
-
+// Passport config (unchanged)
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
@@ -90,14 +94,12 @@ passport.use('42', new OAuth2Strategy({
   clientID: process.env.UID,
   clientSecret: process.env.SECRET,
   callbackURL: process.env.CALLBACK,
-}, function (accessToken, refreshToken, profile, cb) {
+}, (accessToken, refreshToken, profile, cb) => {
   cb(null, { accessToken, profile });
 }));
 
 app.get('/auth/42',
-  passport.authenticate('42', {
-    scope: 'public'
-  })
+  passport.authenticate('42', { scope: 'public' })
 );
 
 app.get('/callback',
@@ -106,12 +108,10 @@ app.get('/callback',
   }),
   async (req, res) => {
     let login;
-    const accessToken = req.user.accessToken;
     try {
+      const accessToken = req.user.accessToken;
       const data = await axios.get('https://api.intra.42.fr/v2/me', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        }
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       login = data.data.login;
       const img = data.data.image.link;
@@ -119,35 +119,31 @@ app.get('/callback',
 
       await create_new_user(login, img, full_name);
 
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
+      const payload = { login };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, options);
 
-    const payload = { login: login };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, options);
-
-    const query = `
-      UPDATE users
-      SET access_token = ? 
-      WHERE intra_login = ?
-    `;
-
-    try {
+      const query = `UPDATE users SET access_token = ? WHERE intra_login = ?`;
       await pool.query(query, [token, login]);
-    } catch (err) {
-      console.log(err);
-      return;
+
+      res.redirect(`app0://auth/callback?token=${token}`);
+    } catch (error) {
+      console.error("Error in callback:", error);
+      res.status(500).send("Authentication failed");
     }
-    res.redirect(`app0://auth/callback?token=${token}`);
   }
 );
 
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+}));
 
+app.use('/', routes);
+app.use('/', user_routes);
 
 app.post('/events_finish', async (req, res) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
+  const token = authHeader?.split(' ')[1];
   if (!token) return res.status(401).json({ message: "Invalid token" });
 
   const { event_id } = req.body;
@@ -157,8 +153,9 @@ app.post('/events_finish', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
-    const message = "hello avatar";
-    sendNotification(userLogin , message);
+    // Send notification on event finish
+    sendNotification(userLogin, "hello avatar");
+
     const isAdmin = await check_if_admin(userLogin);
     if (!isAdmin) return res.status(403).json({ message: "Not allowed to finish event" });
 
@@ -167,18 +164,15 @@ app.post('/events_finish', async (req, res) => {
 
     await pool.query('UPDATE event SET event_done = 1 WHERE event_id = ? AND user_id = ?', [event_id, userId]);
 
-    return res.status(200).json({ message: "Finished successfully" });
-
+    res.status(200).json({ message: "Finished successfully" });
   } catch (err) {
     console.error("Error finishing event:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
 const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
