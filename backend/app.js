@@ -69,6 +69,7 @@ wss.on('connection', async (ws, request) => {
   const parameters = url.parse(request.url, true);
   const token = parameters.query.token;
 
+  console.log(token);
   if (!token) {
     ws.close(1008, "Token required");
     return;
