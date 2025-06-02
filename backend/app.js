@@ -32,7 +32,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-// const server = http.createServer(app);
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
