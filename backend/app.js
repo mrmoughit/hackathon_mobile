@@ -63,8 +63,23 @@ function sendNotification(username, message) {
   io.emit('notification', { username, message });
 }
 
-// Setup WebSocketServer from 'ws' package on same HTTP server
-const wss = new WebSocketServer({ server });
+
+// const wss = new WebSocketServer({ server });
+
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+  // For example, only handle upgrade requests on /ws path by ws:
+  if (request.url === '/ws') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    // Let socket.io handle other upgrade requests
+    socket.destroy();
+  }
+});
+
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
