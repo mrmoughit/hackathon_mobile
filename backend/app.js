@@ -65,20 +65,18 @@ io.on('connection', (socket) => {
 
 // WebSocket (ws) connection handler (if you use ws clients)
 wss.on('connection', (ws) => {
-  console.log('Client connected');
+  console.log('Raw WebSocket client connected');
 
-  // Send a test notification after connecting
   ws.send(JSON.stringify({
     type: 'notification',
     username: 'admin',
     message: 'Welcome to WebSocket!',
   }));
-});
 
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
+  });
 });
-
 
 // Send notification to all connected Socket.IO clients
 // export function sendNotification(username, message) {
