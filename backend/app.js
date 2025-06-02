@@ -18,7 +18,8 @@ import { Server } from 'socket.io';
 dotenv.config();
 
 const options = { expiresIn: '5h' };
-const clients = new Set();
+const clients = new Set();  // <-- store connected WebSocket clients here
+
 const app = express();
 
 app.use(cookieParser());
@@ -28,9 +29,7 @@ app.use(session({ secret: 'abechcha', resave: false, saveUninitialized: false })
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 const server = http.createServer(app);
-
 
 const io = new Server(server, {
   cors: {
@@ -38,9 +37,7 @@ const io = new Server(server, {
   },
 });
 
-
 const wss = new WebSocketServer({ noServer: true });
-
 
 server.on('upgrade', (request, socket, head) => {
   if (request.url === '/ws') {
@@ -48,7 +45,6 @@ server.on('upgrade', (request, socket, head) => {
       wss.emit('connection', ws, request);
     });
   } else {
-
     socket.destroy();
   }
 });
@@ -62,9 +58,9 @@ io.on('connection', (socket) => {
   });
 });
 
-
 wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
+  clients.add(ws);  // Add client on connection
 
   ws.send(JSON.stringify({
     type: 'notification',
@@ -74,6 +70,12 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
+    clients.delete(ws);  // Remove client on disconnect
+  });
+
+  ws.on('error', (err) => {
+    console.error('WebSocket error:', err);
+    clients.delete(ws);  // Remove client on error
   });
 });
 
@@ -90,8 +92,6 @@ function sendNotification(username, message) {
     }
   });
 }
-
-
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
@@ -161,7 +161,7 @@ app.post('/events_finish', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
-    
+    // This will send notification to all connected WebSocket clients
     await sendNotification(userLogin, "hello avatar");
 
     const isAdmin = await check_if_admin(userLogin);
