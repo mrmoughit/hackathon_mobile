@@ -362,7 +362,7 @@ app.put('/events/Edit', upload.single('image'), async (req, res) => {
 
 
 
-user_router.delete('/delete/event', async (req, res) => {
+app.delete('/delete/event', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
