@@ -76,7 +76,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-export function sendNotification(username, message) {
+function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
   console.log('Sending to clients:', payload);
 
