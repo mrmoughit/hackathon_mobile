@@ -181,7 +181,6 @@ user_router.get('/is_saved', async (req, res) => {
 });
 
 
-
 user_router.delete('/delete/event', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
