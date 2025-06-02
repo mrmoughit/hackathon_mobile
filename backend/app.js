@@ -78,22 +78,17 @@ wss.on('connection', (ws) => {
   });
 });
 
-
-// export function sendNotification(username, message) {
-//   console.log("Sending notification:", { username, message });
-//   io.emit('notification', { username, message });
-// }
-
-
 function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
-  ws.send(JSON.stringify({
-    type: 'notification',
-    username: username,
-    message: message,
-  }));
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
 }
-// Passport config (unchanged)
+
+
+
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
