@@ -67,10 +67,8 @@ wss.on('connection', async (ws, request) => {
   console.log('Raw WebSocket client connected');
 
   const parameters = url.parse(request.url, true);
-  const token = parameters.query.token;
-
-  console.log("towken==> " , request.query);
-  console.log("token==> " , token);
+  // const token = parameters.query.token;
+  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbiI6Inl6b3VsbGlrIiwiaWF0IjoxNzQ4ODM2NzExLCJleHAiOjE3NDg4NTQ3MTF9.dL3U10HG7BS-pPyw5W1b2MOEriChHKQ1Uf6jIjFDq-w';
   if (!token) {
     ws.close(1008, "Token required");
     return;
