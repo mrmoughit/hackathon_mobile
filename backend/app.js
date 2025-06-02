@@ -113,7 +113,7 @@ async function sendNotification(username, message) {
   const user_id = await get_user_id(username);
   if (user_id === -1) return;
 
-  const ws = clients.get(user_id);
+  const ws = clients_socket.get(user_id);
   if (ws && ws.readyState === WebSocket.OPEN) {
     const payload = JSON.stringify({ type: 'notification', username, message });
     ws.send(payload);
