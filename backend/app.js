@@ -15,11 +15,6 @@ import { create_new_user, check_if_admin, get_user_id } from './help.js';
 import { Server } from 'socket.io';
 import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
-const { io, wss, sendNotification } = initSockets(server, pool);
-
-
-const server = http.createServer(app);
-
 
 
 dotenv.config();
@@ -29,6 +24,7 @@ const clients = new Set();
 
 const app = express();
 
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: '*', credentials: true }));
@@ -36,7 +32,65 @@ app.use(session({ secret: 'abechcha', resave: false, saveUninitialized: false })
 app.use(passport.initialize());
 app.use(passport.session());
 
+const server = http.createServer(app);
 
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+  if (request.url === '/ws') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+wss.on('connection', (ws) => {
+  console.log('Raw WebSocket client connected');
+  clients.add(ws);  
+  
+  
+  
+  ws.on('close', () => {
+    console.log('Raw WebSocket client disconnected');
+    clients.delete(ws);  
+  });
+  
+  ws.on('error', (err) => {
+    console.error('WebSocket error:', err);
+    clients.delete(ws);  
+  });
+});
+
+function sendNotification(username, message) {
+  const payload = JSON.stringify({ type: 'notification', username, message });
+  console.log('Sending to clients:', payload);
+
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+      console.log('Sent to client');
+    } else {
+      console.log('Skipped client: not open');
+    }
+  });
+}
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));

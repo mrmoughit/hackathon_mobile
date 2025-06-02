@@ -7,9 +7,12 @@ import { create_new_user  , convert_houre , check_if_admin , get_user_id} from '
 import { Server } from 'socket.io';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
-const { io, wss, sendNotification } = initSockets(server, pool);
+
 
 const router = Router();
+
+
+
 
 
 
@@ -311,7 +314,7 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
         eventDateTime
       ]
     );
-    await sendNotification(userLogin, "hello avatar");
+    // await sendNotification(userLogin, "hello avatar");
     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
 
   } catch (err) {
