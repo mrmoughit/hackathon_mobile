@@ -21,6 +21,7 @@ const options = { expiresIn: '5h' };
 const clients = new Set();  // <-- store connected WebSocket clients here
 
 const app = express();
+const clients_socket = new Map();
 
 app.use(cookieParser());
 app.use(express.json());
@@ -49,7 +50,7 @@ server.on('upgrade', (request, socket, head) => {
   }
 });
 
-// Socket.IO connection handler
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -58,39 +59,68 @@ io.on('connection', (socket) => {
   });
 });
 
-wss.on('connection', (ws) => {
+import url from 'url'; 
+
+
+
+wss.on('connection', async (ws, request) => {
   console.log('Raw WebSocket client connected');
-  clients.add(ws);  // Add client on connection
 
-  // ws.send(JSON.stringify({
-  //   type: 'notification',
-  //   username: 'admin',
-  //   message: 'Welcome to WebSocket!',
-  // }));
+  const parameters = url.parse(request.url, true);
+  const token = parameters.query.token;
 
-  ws.on('close', () => {
-    console.log('Raw WebSocket client disconnected');
-    clients.delete(ws);  // Remove client on disconnect
-  });
+  if (!token) {
+    ws.close(1008, "Token required");
+    return;
+  }
 
-  ws.on('error', (err) => {
-    console.error('WebSocket error:', err);
-    clients.delete(ws);  // Remove client on error
-  });
+  try {
+    const [rows] = await pool.query("SELECT id FROM users WHERE access_token = ?", [token]);
+
+    if (!rows.length) {
+      ws.close(1008, "Invalid token");
+      return;
+    }
+
+    const user_id = rows[0].id;
+
+    clients_socket.set(user_id, ws);
+
+    ws.on('close', () => {
+      console.log('Raw WebSocket client disconnected');
+      clients_socket.delete(user_id);
+    });
+
+    ws.on('error', (err) => {
+      console.error('WebSocket error:', err);
+      clients_socket.delete(user_id);
+    });
+
+    ws.send(JSON.stringify({
+      type: 'notification',
+      user_id,
+      message: `Welcome user ${user_id}!`,
+    }));
+
+  } catch (err) {
+    console.error('DB error:', err);
+    ws.close(1011, "Internal server error");
+  }
 });
 
-function sendNotification(username, message) {
-  const payload = JSON.stringify({ type: 'notification', username, message });
-  console.log('Sending to clients:', payload);
 
-  clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(payload);
-      console.log('Sent to client');
-    } else {
-      console.log('Skipped client: not open');
-    }
-  });
+async function sendNotification(username, message) {
+  const user_id = await get_user_id(username);
+  if (user_id === -1) return;
+
+  const ws = clients.get(user_id);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const payload = JSON.stringify({ type: 'notification', username, message });
+    ws.send(payload);
+    console.log(`Sent notification to user_id ${user_id}`);
+  } else {
+    console.log(`User ${username} (id ${user_id}) is not connected`);
+  }
 }
 
 passport.serializeUser((user, done) => done(null, user));
