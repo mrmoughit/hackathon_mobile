@@ -119,8 +119,8 @@ user_router.post('/add/saved/event', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: "Token missing or invalid" });
     }
+    console.log(req.params);
 
-    console.log(req.body);
     const event_id = req.body.event_id;
     if (!event_id) return res.status(400).json({ error: "Missing event ID" });
 
