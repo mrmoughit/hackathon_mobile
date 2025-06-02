@@ -506,7 +506,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 
-app.delete('/delete/event', async (req, res) => {
+app.delete('/delete/saved/event', async (req, res) => {
   console.log("here");
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
