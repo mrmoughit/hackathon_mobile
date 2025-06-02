@@ -362,42 +362,48 @@ app.put('/events/Edit', upload.single('image'), async (req, res) => {
 
 
 
-app.delete('/events_delete', async (req, res) => {
+user_router.delete('/delete/event', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: "Invalid token" });
 
-  const { event_id } = req.body;
-  if (!event_id) return res.status(400).json({ message: "Missing event ID" });
+  if (!token) {
+    return res.status(401).json({ error: "Token missing or invalid" });
+  }
+
+  const event_id = req.body.event_id;
+  if (!event_id) {
+    return res.status(400).json({ error: "Missing event ID" });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
 
-    const isAdmin = await check_if_admin(userLogin);
-    if (!isAdmin) return res.status(403).json({ message: "Not allowed to delete event" });
-
     const userId = await get_user_id(userLogin);
-    if (userId === -1) return res.status(500).json({ message: "Internal server error" });
-
-    await pool.query('DELETE FROM registration WHERE event_id = ?', [event_id]);
-
-    const [result] = await pool.query(
-      'DELETE FROM event WHERE event_id = ? AND user_id = ?',
-      [event_id, userId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Event not found or not owned by user" });
+    if (userId === -1) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json({ message: "Deleted successfully" });
+    // Optional: check if user has permission to delete event here
 
-  } catch (err) {
-    console.error("Error deleting event:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    // Step 1: Delete related saved entries first
+    await pool.query('DELETE FROM saved WHERE event_id = ?', [event_id]);
+
+    // Step 2: Delete the event itself
+    const [result] = await pool.query('DELETE FROM event WHERE event_id = ?', [event_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    return res.status(200).json({ message: "Event and saved references deleted successfully" });
+
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 
