@@ -53,7 +53,7 @@ server.on('upgrade', (request, socket, head) => {
 // Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
-
+  
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -62,14 +62,14 @@ io.on('connection', (socket) => {
 wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
   clients.add(ws);  
-
-
-
+  
+  
+  
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
     clients.delete(ws);  
   });
-
+  
   ws.on('error', (err) => {
     console.error('WebSocket error:', err);
     clients.delete(ws);  
@@ -104,24 +104,24 @@ passport.use('42', new OAuth2Strategy({
 }));
 
 app.get('/auth/42',
-  passport.authenticate('42', { scope: 'public' })
+passport.authenticate('42', { scope: 'public' })
 );
 
 app.get('/callback',
-  passport.authenticate('42', {
-    failureRedirect: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  }),
-  async (req, res) => {
-    let login;
-    try {
-      const accessToken = req.user.accessToken;
-      const data = await axios.get('https://api.intra.42.fr/v2/me', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      login = data.data.login;
-      const img = data.data.image.link;
-      const full_name = data.data.usual_full_name;
-
+passport.authenticate('42', {
+  failureRedirect: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+}),
+async (req, res) => {
+  let login;
+  try {
+    const accessToken = req.user.accessToken;
+    const data = await axios.get('https://api.intra.42.fr/v2/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    login = data.data.login;
+    const img = data.data.image.link;
+    const full_name = data.data.usual_full_name;
+    
       await create_new_user(login, img, full_name);
 
       const payload = { login };
