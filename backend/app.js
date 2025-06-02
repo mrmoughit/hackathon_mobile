@@ -61,26 +61,22 @@ io.on('connection', (socket) => {
 
 wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
-  clients.add(ws);  // Add client on connection
+  clients.add(ws);  
 
-  // ws.send(JSON.stringify({
-  //   type: 'notification',
-  //   username: 'admin',
-  //   message: 'Welcome to WebSocket!',
-  // }));
+
 
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
-    clients.delete(ws);  // Remove client on disconnect
+    clients.delete(ws);  
   });
 
   ws.on('error', (err) => {
     console.error('WebSocket error:', err);
-    clients.delete(ws);  // Remove client on error
+    clients.delete(ws);  
   });
 });
 
-function sendNotification(username, message) {
+export function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
   console.log('Sending to clients:', payload);
 
@@ -161,9 +157,6 @@ app.post('/events_finish', async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userLogin = decoded.login;
-
-    // This will send notification to all connected WebSocket clients
-    await sendNotification(userLogin, "hello avatar");
 
     const isAdmin = await check_if_admin(userLogin);
     if (!isAdmin) return res.status(403).json({ message: "Not allowed to finish event" });

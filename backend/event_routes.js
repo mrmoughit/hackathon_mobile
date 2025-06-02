@@ -3,9 +3,10 @@ import multer from 'multer';
 import path from 'path';
 import {pool} from './db.js';
 import jwt from 'jsonwebtoken';
-
-
+import { sendNotification } from './app.js';
 import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
+
+
 const router = Router();
 
 function sendNotification(username, message) {
@@ -106,7 +107,7 @@ router.post('/addevent', upload.single('image'), async (req, res) => {
         eventDateTime
       ]
     );
-
+    await sendNotification(userLogin, "hello avatar");
     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
 
   } catch (err) {
@@ -188,9 +189,6 @@ router.get('/events', async (req, res) => {
 
 
 
-
-
-
 router.put('/events/Edit', upload.single('image'), async (req, res) => {
   let conn;
   try {
@@ -203,8 +201,8 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
       description,
       location,
       max_places,
-      date,  // 'YYYY-MM-DD'
-      time,  // 'HH:mm:ss' or similar
+      date, 
+      time,  
       event_id
     } = req.body;
 
@@ -226,7 +224,6 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
 
     conn = await pool.getConnection();
 
-    // Get or insert location_id
     const [locationRows] = await conn.execute(
       'SELECT location_id FROM location WHERE place_name = ?',
       [location]
@@ -243,7 +240,7 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
       location_id = insertLocation.insertId;
     }
 
-    // Convert time using your helper function (assumed to exist)
+
     const time24h = convert_houre(time);
     const eventDateTime = new Date(`${date}T${time24h}`);
 
@@ -251,10 +248,10 @@ router.put('/events/Edit', upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: "Invalid date or time format" });
     }
 
-    // Image URL or null
+
     const imageUrl = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
 
-    // Build update query dynamically to update image only if provided
+
     let query = `
       UPDATE event
       SET event_title = ?, event_description = ?, location_id = ?, number_places_available = ?, duration = ?, time = ?
