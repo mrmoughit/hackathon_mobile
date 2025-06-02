@@ -203,9 +203,21 @@ user_router.delete('/delete/event', async (req, res) => {
         return res.status(404).json({ error: "User not found" });
       }
   
-
-      await pool.query('DELETE FROM saved WHERE event_id = ?', [event_id]);
+      // Optional: Check if user owns the event or is admin
+      const [eventRows] = await pool.query('SELECT user_id FROM event WHERE event_id = ?', [event_id]);
+      if (eventRows.length === 0) {
+        return res.status(404).json({ error: "Event not found" });
+      }
   
+      if (eventRows[0].user_id !== userId) {
+        // Optionally check admin here if you want
+        return res.status(403).json({ error: "Not authorized to delete this event" });
+      }
+  
+      // Delete saved references only for this user and event
+      await pool.query('DELETE FROM saved WHERE user_id = ? AND event_id = ?', [userId, event_id]);
+  
+      // Delete the event itself
       const [result] = await pool.query('DELETE FROM event WHERE event_id = ?', [event_id]);
   
       if (result.affectedRows === 0) {
