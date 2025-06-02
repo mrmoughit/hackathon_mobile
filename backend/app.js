@@ -56,12 +56,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Function to send notification to all connected clients
-export function sendNotification(username, message) {
-  io.emit('notification', { username, message });
-}
 
-// Setup WebSocketServer from 'ws' package on same HTTP server
 const wss = new WebSocketServer({ server });
 
 passport.serializeUser((user, done) => done(null, user));
