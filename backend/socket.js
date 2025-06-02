@@ -47,7 +47,7 @@ export function initSockets(server, pool) {
     });
   });
 
-  export function sendNotification(username, message) {
+   function sendNotification(username, message) {
     const payload = JSON.stringify({ type: 'notification', username, message });
     console.log('Sending to clients:', payload);
 
@@ -63,3 +63,5 @@ export function initSockets(server, pool) {
 
   return { io, wss, sendNotification };
 }
+
+module.exports = { initSockets , sendNotification };
