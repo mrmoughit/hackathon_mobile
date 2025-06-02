@@ -507,6 +507,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 app.delete('/delete/event', async (req, res) => {
+  console.log("here");
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -515,7 +516,6 @@ app.delete('/delete/event', async (req, res) => {
   }
 
   const event_id = req.body.event_id;
-  console.log(req.body.event_id);
   
   if (!event_id) {
     return res.status(400).json({ error: "Missing event ID" });
