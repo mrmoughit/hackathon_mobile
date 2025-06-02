@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import {pool} from './db.js';
 import jwt from 'jsonwebtoken';
-import { sendNotification } from './app.js';
+
 
 import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
 const router = Router();
@@ -329,37 +329,6 @@ router.delete('/events_delete', async (req, res) => {
 
 
 
-
-router.post('/events_finish', async (req, res) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.status(401).json({ message: "Invalid token" });
-
-  const { event_id } = req.body;
-  if (!event_id) return res.status(400).json({ message: "Missing event ID" });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userLogin = decoded.login;
-
-    const message = "hello avatar";
-    sendNotification(userLogin , message);
-    const isAdmin = await check_if_admin(userLogin);
-    if (!isAdmin) return res.status(403).json({ message: "Not allowed to finish event" });
-
-    const userId = await get_user_id(userLogin);
-    if (userId === -1) return res.status(500).json({ message: "Internal server error" });
-
-    await pool.query('UPDATE event SET event_done = 1 WHERE event_id = ? AND user_id = ?', [event_id, userId]);
-
-    return res.status(200).json({ message: "Finished successfully" });
-
-  } catch (err) {
-    console.error("Error finishing event:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
 
 
 
