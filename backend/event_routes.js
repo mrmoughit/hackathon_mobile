@@ -12,10 +12,6 @@ import http from 'http';
 const router = Router();
 
 
-
-
-
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, '/var/www/html/uploads');
