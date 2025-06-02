@@ -7,7 +7,7 @@ import { create_new_user  , convert_houre , check_if_admin , get_user_id} from '
 import { Server } from 'socket.io';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
-const { initSockets  , sendNotification} = require('./socket.js');
+import { initSockets  , sendNotification} from './socket.js';
 
 const router = Router();
 
