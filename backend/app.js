@@ -484,7 +484,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         eventDateTime
       ]
     );
-    await sendNotification(userLogin, "hello avatar");
+    await sendNotification(userLogin, "Hi everyone an event was added ");
     res.status(201).json({ message: 'Event created', event_id: insertEvent.insertId });
 
   } catch (err) {
