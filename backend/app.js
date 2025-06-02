@@ -384,12 +384,10 @@ user_router.delete('/delete/event', async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Optional: check if user has permission to delete event here
 
-    // Step 1: Delete related saved entries first
     await pool.query('DELETE FROM saved WHERE event_id = ?', [event_id]);
 
-    // Step 2: Delete the event itself
+
     const [result] = await pool.query('DELETE FROM event WHERE event_id = ?', [event_id]);
 
     if (result.affectedRows === 0) {
