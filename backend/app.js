@@ -17,6 +17,8 @@ import { log } from 'console';
 import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
 import multer from 'multer';
 import path from 'path';
+import { Server } from 'socket.io';
+
 
 const options = { expiresIn: '5h' };
 
@@ -30,7 +32,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+// const server = http.createServer(app);
 
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  }
+});
 let accessToken = "";
 
 
@@ -43,6 +51,18 @@ app.use(cors({
 app.use('/', routes);
 app.use('/', user_routes);
 
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+
+function sendNotification(username, message) {
+  io.emit('notification', { username, message });
+}
 
 
 passport.serializeUser((user, done) => done(null, user));
