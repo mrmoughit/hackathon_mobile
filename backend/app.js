@@ -506,8 +506,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
 
 
 
-app.delete('/delete/saved/event', async (req, res) => {
-  console.log("here");
+app.delete('/delete/event', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -530,21 +529,18 @@ app.delete('/delete/saved/event', async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Optional: Check if user owns the event or is admin
     const [eventRows] = await pool.query('SELECT user_id FROM event WHERE event_id = ?', [event_id]);
     if (eventRows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
     }
 
     if (eventRows[0].user_id !== userId) {
-      // Optionally check admin here if you want
+
       return res.status(403).json({ error: "Not authorized to delete this event" });
     }
 
-    // Delete saved references only for this user and event
-    await pool.query('DELETE FROM saved WHERE user_id = ? AND event_id = ?', [userId, event_id]);
 
-    // Delete the event itself
+    await pool.query('DELETE FROM saved WHERE user_id = ? AND event_id = ?', [userId, event_id]);
     const [result] = await pool.query('DELETE FROM event WHERE event_id = ?', [event_id]);
 
     if (result.affectedRows === 0) {
@@ -559,6 +555,48 @@ app.delete('/delete/saved/event', async (req, res) => {
   }
 });
 
+
+
+app.delete('/delete/saved/event', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "Token missing or invalid" });
+  }
+
+  const event_id = req.body.event_id;
+  
+  if (!event_id) {
+    return res.status(400).json({ error: "Missing event ID" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
+
+    const userId = await get_user_id(userLogin);
+    if (userId === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Delete the saved event entry for this user and event
+    const [result] = await pool.query(
+      'DELETE FROM saved WHERE user_id = ? AND event_id = ?',
+      [userId, event_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Saved event not found" });
+    }
+
+    return res.status(200).json({ message: "Saved event deleted successfully" });
+
+  } catch (error) {
+    console.error("Error deleting saved event:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 
