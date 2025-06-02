@@ -21,7 +21,7 @@ const options = { expiresIn: '5h' };
 const clients = new Set();  // <-- store connected WebSocket clients here
 
 const app = express();
-const clients_socket = new Map();
+// const clients = new Map();
 
 app.use(cookieParser());
 app.use(express.json());
@@ -50,7 +50,7 @@ server.on('upgrade', (request, socket, head) => {
   }
 });
 
-
+// Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -59,70 +59,39 @@ io.on('connection', (socket) => {
   });
 });
 
-import url from 'url'; 
-
-
-
-wss.on('connection', async (ws, request) => {
+wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
+  clients.add(ws);  // Add client on connection
 
-  const parameters = url.parse(request.url, true);
-  // const token = parameters.query.token;
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbiI6Inl6b3VsbGlrIiwiaWF0IjoxNzQ4ODM2NzExLCJleHAiOjE3NDg4NTQ3MTF9.dL3U10HG7BS-pPyw5W1b2MOEriChHKQ1Uf6jIjFDq-w';
-  if (!token) {
-    ws.close(1008, "Token required");
-    return;
-  }
+  // ws.send(JSON.stringify({
+  //   type: 'notification',
+  //   username: 'admin',
+  //   message: 'Welcome to WebSocket!',
+  // }));
 
-  try {
-    const [rows] = await pool.query("SELECT id FROM users WHERE access_token = ?", [token]);
+  ws.on('close', () => {
+    console.log('Raw WebSocket client disconnected');
+    clients.delete(ws);  // Remove client on disconnect
+  });
 
-    if (!rows.length) {
-      ws.close(1008, "Invalid token");
-      return;
-    }
-
-    const user_id = String(rows[0].id);
-    console.log(`Registering socket for user_id: ${user_id}`);
-
-    clients_socket.set(user_id, ws);
-
-    ws.on('close', () => {
-      console.log(`Raw WebSocket client disconnected: user_id ${user_id}`);
-      clients_socket.delete(user_id);
-    });
-
-    ws.on('error', (err) => {
-      console.error(`WebSocket error: user_id ${user_id}`, err);
-      clients_socket.delete(user_id);
-    });
-
-    ws.send(JSON.stringify({
-      type: 'notification',
-      user_id,
-      message: `Welcome user ${user_id}!`,
-    }));
-
-  } catch (err) {
-    console.error('DB error:', err);
-    ws.close(1011, "Internal server error");
-  }
+  ws.on('error', (err) => {
+    console.error('WebSocket error:', err);
+    clients.delete(ws);  // Remove client on error
+  });
 });
 
+function sendNotification(username, message) {
+  const payload = JSON.stringify({ type: 'notification', username, message });
+  console.log('Sending to clients:', payload);
 
-async function sendNotification(username, message) {
-  const user_id = String(await get_user_id(username));
-  if (user_id === '-1') return;
-
-  const ws = clients_socket.get(user_id);
-
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    const payload = JSON.stringify({ type: 'notification', username, message });
-    ws.send(payload);
-    console.log(`Sent notification to user_id ${user_id}`);
-  } else {
-    console.log(`User ${username} (id ${user_id}) is not connected`);
-  }
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+      console.log('Sent to client');
+    } else {
+      console.log('Skipped client: not open');
+    }
+  });
 }
 
 passport.serializeUser((user, done) => done(null, user));
