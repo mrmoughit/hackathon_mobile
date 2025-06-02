@@ -125,5 +125,4 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Export sendNotification if needed elsewhere
-export { sendNotification };
+
