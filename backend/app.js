@@ -800,8 +800,13 @@ app.delete('/events_delete', async (req, res) => {
     const userId = await get_user_id(userLogin);
     if (userId === -1) return res.status(500).json({ message: "Internal server error" });
 
+    // First, remove from saved if exists
+    await pool.query('DELETE FROM saved WHERE event_id = ?', [event_id]);
+
+    // Then remove from registration table
     await pool.query('DELETE FROM registration WHERE event_id = ?', [event_id]);
 
+    // Finally, remove from event table only if owned by the user
     const [result] = await pool.query(
       'DELETE FROM event WHERE event_id = ? AND user_id = ?',
       [event_id, userId]
@@ -818,6 +823,7 @@ app.delete('/events_delete', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 
 
