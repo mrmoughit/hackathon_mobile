@@ -222,7 +222,7 @@ class _MyEventPageState extends State<MyEventPage> {
       }
 
       final response = await http.delete(
-        Uri.parse('http://13.60.16.112:4000/events_delete'),
+        Uri.parse('http://13.61.182.165:4000/events_delete'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -259,7 +259,7 @@ class _MyEventPageState extends State<MyEventPage> {
         return;
       }
 
-      final uri = Uri.parse('http://13.60.16.112:4000/events_finish');
+      final uri = Uri.parse('http://13.61.182.165:4000/events_finish');
       final request = http.Request('POST', uri)
         ..headers.addAll({
           'Content-Type': 'application/json',

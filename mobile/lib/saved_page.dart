@@ -30,7 +30,7 @@ class _SavedPageState extends State<SavedPage> with RouteAware {
       if (token == null) throw Exception("No token found");
 
       final response = await http.get(
-        Uri.parse('http://13.60.16.112:4000/get/saved/event'),
+        Uri.parse('http://13.61.182.165:4000/get/saved/event'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

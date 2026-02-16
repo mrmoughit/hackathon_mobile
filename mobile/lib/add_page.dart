@@ -59,7 +59,7 @@ class _AddPageState extends State<AddPage> {
       final token = prefs.getString('token');
       if (token == null) throw Exception('Token not found');
 
-      final uri = Uri.parse('http://13.60.16.112:4000/addevent');
+      final uri = Uri.parse('http://13.61.182.165:4000/addevent');
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..fields['title'] = _title!

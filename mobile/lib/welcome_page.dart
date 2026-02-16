@@ -78,7 +78,7 @@ class _WelcomePageState extends State<WelcomePage> {
   Future<void> _handleGetStarted() async {
     setState(() => _loading = true);
 
-    const authUrl = 'http://13.60.16.112:4000/auth/42';
+    const authUrl = 'http://13.61.182.165:4000/auth/42';
     final uri = Uri.parse(authUrl);
 
     try {

@@ -33,7 +33,7 @@ class _EventPageState extends State<EventPage> {
     if (token == null || eventId == null) return;
 
     final response = await http.get(
-      Uri.parse('http://13.60.16.112:4000/is_resgiter?event_id=$eventId'),
+      Uri.parse('http://13.61.182.165:4000/is_resgiter?event_id=$eventId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -61,7 +61,7 @@ class _EventPageState extends State<EventPage> {
     if (token == null || eventId == null) return;
 
     final response = await http.get(
-      Uri.parse('http://13.60.16.112:4000/is_saved?event_id=$eventId'),
+      Uri.parse('http://13.61.182.165:4000/is_saved?event_id=$eventId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -87,8 +87,8 @@ Future<void> _toggleSaveEvent() async {
   if (token == null || eventId == null) return;
 
   final uri = isSaved
-      ? Uri.parse('http://13.60.16.112:4000/delete/saved/event')
-      : Uri.parse('http://13.60.16.112:4000/add/saved/event');
+      ? Uri.parse('http://13.61.182.165:4000/delete/saved/event')
+      : Uri.parse('http://13.61.182.165:4000/add/saved/event');
 
   final headers = {
     'Authorization': 'Bearer $token',
@@ -127,7 +127,7 @@ Future<void> _toggleSaveEvent() async {
     if (token == null || eventId == null) return;
 
     final response = await http.post(
-      Uri.parse('http://13.60.16.112:4000/add_registration'),
+      Uri.parse('http://13.61.182.165:4000/add_registration'),
       headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
       body: json.encode({'event_id': eventId}),
     );
@@ -154,7 +154,7 @@ Future<void> _toggleSaveEvent() async {
     if (token == null || eventId == null) return;
 
     final response = await http.delete(
-      Uri.parse('http://13.60.16.112:4000/delete_register?event_id=$eventId'),
+      Uri.parse('http://13.61.182.165:4000/delete_register?event_id=$eventId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 

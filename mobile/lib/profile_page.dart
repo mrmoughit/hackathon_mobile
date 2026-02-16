@@ -47,7 +47,7 @@
 //       if (token == null) throw Exception("No token found");
 
 //       final response = await http.get(
-//         Uri.parse('http://13.60.16.112:4000/user'),
+//         Uri.parse('http://13.61.182.165:4000/user'),
 //         headers: {
 //           'Authorization': 'Bearer $token',
 //           'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
       if (token == null) throw Exception("No token found");
 
       final response = await http.get(
-        Uri.parse('http://13.60.16.112:4000/user'),
+        Uri.parse('http://13.61.182.165:4000/user'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

@@ -84,7 +84,7 @@ class _UpdatePageState extends State<UpdatePage> {
       final token = prefs.getString('token');
       if (token == null) throw Exception('Token not found');
 
-      final uri = Uri.parse('http://13.60.16.112:4000/events/Edit');
+      final uri = Uri.parse('http://13.61.182.165:4000/events/Edit');
       final request = http.MultipartRequest('PUT', uri)
         ..headers['authorization'] = 'Bearer $token'
         ..fields['event_id'] = widget.event['event_id'].toString()

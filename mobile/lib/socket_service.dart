@@ -21,7 +21,7 @@ class WebSocketService {
 
     try {
       // ✅ If your server expects a path like /ws, change it here
-      final uri = Uri.parse('ws://13.60.16.112:4000/ws');
+      final uri = Uri.parse('ws://13.61.182.165:4000/ws');
 
       _channel = WebSocketChannel.connect(uri);
 

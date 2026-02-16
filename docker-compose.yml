@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: hackathon_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: app
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
