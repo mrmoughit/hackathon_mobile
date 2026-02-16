@@ -15,7 +15,7 @@ import { Server } from 'socket.io';
 import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
 
-import { create_new_user  , convert_houre , check_if_admin , get_user_id} from './help.js'
+import { create_new_user, convert_houre, check_if_admin, get_user_id } from './help.js'
 
 dotenv.config();
 
@@ -59,7 +59,7 @@ server.on('upgrade', (request, socket, head) => {
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
-  
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -67,25 +67,25 @@ io.on('connection', (socket) => {
 
 wss.on('connection', (ws) => {
   console.log('Raw WebSocket client connected');
-  clients.add(ws);  
-  
-  
-  
+  clients.add(ws);
+
+
+
   ws.on('close', () => {
     console.log('Raw WebSocket client disconnected');
-    clients.delete(ws);  
+    clients.delete(ws);
   });
-  
+
   ws.on('error', (err) => {
     console.error('WebSocket error:', err);
-    clients.delete(ws);  
+    clients.delete(ws);
   });
 });
 
 function sendNotification(username, message) {
   const payload = JSON.stringify({ type: 'notification', username, message });
   console.log('Sending to clients:', payload);
-  
+
   clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(payload);
@@ -111,24 +111,24 @@ passport.use('42', new OAuth2Strategy({
 }));
 
 app.get('/auth/42',
-passport.authenticate('42', { scope: 'public' })
+  passport.authenticate('42', { scope: 'public' })
 );
 
 app.get('/callback',
-passport.authenticate('42', {
-  failureRedirect: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-}),
-async (req, res) => {
-  let login;
-  try {
-    const accessToken = req.user.accessToken;
-    const data = await axios.get('https://api.intra.42.fr/v2/me', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    login = data.data.login;
-    const img = data.data.image.link;
-    const full_name = data.data.usual_full_name;
-    
+  passport.authenticate('42', {
+    failureRedirect: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  }),
+  async (req, res) => {
+    let login;
+    try {
+      const accessToken = req.user.accessToken;
+      const data = await axios.get('https://api.intra.42.fr/v2/me', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      login = data.data.login;
+      const img = data.data.image.link;
+      const full_name = data.data.usual_full_name;
+
       await create_new_user(login, img, full_name);
 
       const payload = { login };
@@ -209,18 +209,18 @@ app.get('/events', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  
+
   if (!token)
     return res.status(401).json("invalid token");
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const login = decoded.login;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const login = decoded.login;
   } catch (err) {
     return res.status(401).json({ error: "Invalid token" });
   }
 
   try {
-      const [rows] = await pool.query(`
+    const [rows] = await pool.query(`
           SELECT 
               e.event_id,
               e.user_id,
@@ -240,27 +240,27 @@ app.get('/events', async (req, res) => {
           GROUP BY e.event_id
       `);
 
-      const events = rows.map(row => ({
-          event_id: row.event_id,
-          user_id: row.user_id,
-          event_title: row.event_title,
-          time: row.time,
-          number_places_available: row.number_places_available,
-          duration: row.duration,
-          event_description: row.event_description,
-          event_image: row.event_image,
-          location: {
-              location_id: row.location_id,
-              city: row.city,
-              place_name: row.place_name
-          },
-          number_of_registrations: row.number_of_registrations
-      }));
+    const events = rows.map(row => ({
+      event_id: row.event_id,
+      user_id: row.user_id,
+      event_title: row.event_title,
+      time: row.time,
+      number_places_available: row.number_places_available,
+      duration: row.duration,
+      event_description: row.event_description,
+      event_image: row.event_image,
+      location: {
+        location_id: row.location_id,
+        city: row.city,
+        place_name: row.place_name
+      },
+      number_of_registrations: row.number_of_registrations
+    }));
 
-      res.json(events);
+    res.json(events);
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -283,8 +283,8 @@ app.put('/events/Edit', upload.single('image'), async (req, res) => {
       description,
       location,
       max_places,
-      date, 
-      time,  
+      date,
+      time,
       event_id
     } = req.body;
 
@@ -331,7 +331,7 @@ app.put('/events/Edit', upload.single('image'), async (req, res) => {
     }
 
 
-    const imageUrl = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
+    const imageUrl = req.file ? `http://${process.env._IP}/uploads/${req.file.filename}` : null;
 
 
     let query = `
@@ -423,7 +423,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     userLogin = decoded.login;
 
-    user_id = await get_user_id(userLogin); 
+    user_id = await get_user_id(userLogin);
     if (!user_id || user_id === 0)
       return res.status(500).json({ error: "Internal server error: user not found" });
 
@@ -432,7 +432,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     return res.status(401).json({ error: "Invalid token" });
   }
 
-  const isAdmin = await check_if_admin(userLogin); 
+  const isAdmin = await check_if_admin(userLogin);
   if (!isAdmin)
     return res.status(403).json("Not allowed to add event");
 
@@ -453,7 +453,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     return res.status(400).json("Missing required data");
   }
 
-  const image = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
+  const image = req.file ? `http://${process.env._IP}/uploads/${req.file.filename}` : null;
   const time24h = convert_houre(time);
   const eventDateTime = new Date(`${date}T${time24h}`);
 
@@ -489,7 +489,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
         description,
         image,
         max_places,
-        60, 
+        60,
         eventDateTime
       ]
     );
@@ -500,7 +500,7 @@ app.post('/addevent', upload.single('image'), async (req, res) => {
     console.error('Error creating event:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   } finally {
-    if (conn) conn.release(); 
+    if (conn) conn.release();
   }
 });
 
@@ -515,7 +515,7 @@ app.delete('/delete/event', async (req, res) => {
   }
 
   const event_id = req.body.event_id;
-  
+
   if (!event_id) {
     return res.status(400).json({ error: "Missing event ID" });
   }
@@ -567,7 +567,7 @@ app.delete('/delete/saved/event', async (req, res) => {
 
   console.log(req.body);
   const event_id = req.body.event_id;
-  
+
   if (!event_id) {
     return res.status(400).json({ error: "Missing event ID" });
   }
@@ -610,30 +610,30 @@ app.delete('/delete/saved/event', async (req, res) => {
 app.post('/add/saved/event', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
+
   if (!token) {
-      return res.status(401).json({ error: "Token missing or invalid" });
+    return res.status(401).json({ error: "Token missing or invalid" });
   }
-  
+
   const event_id = req.body.event_id;
   if (!event_id) return res.status(400).json({ error: "Missing event ID" });
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLogin = decoded.login;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
 
-      const id = await get_user_id(userLogin);
-      if (id === -1) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    const id = await get_user_id(userLogin);
+    if (id === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      await pool.query('INSERT INTO saved (user_id, event_id) VALUES (?, ?)', [id, event_id]);
+    await pool.query('INSERT INTO saved (user_id, event_id) VALUES (?, ?)', [id, event_id]);
 
-      res.status(201).json({ message: "Event saved successfully" });
+    res.status(201).json({ message: "Event saved successfully" });
 
   } catch (error) {
-      console.error("Error in /add/saved/event:", error);
-      res.status(500).json({ error: "Internal server error" });
+    console.error("Error in /add/saved/event:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -644,29 +644,29 @@ app.post('/add_registration', async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-      return res.status(401).json({ error: "Token missing or invalid" });
+    return res.status(401).json({ error: "Token missing or invalid" });
   }
 
   const event_id = req.body.event_id;
   if (!event_id) {
-      return res.status(400).json({ error: "Missing event ID" });
+    return res.status(400).json({ error: "Missing event ID" });
   }
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLogin = decoded.login;
-      
-      const id = await get_user_id(userLogin);
-      if (id === -1) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
 
-      await pool.query('INSERT INTO registration (user_id, event_id) VALUES (?, ?)', [id, event_id]);
+    const id = await get_user_id(userLogin);
+    if (id === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      res.status(201).json({ message: "Registered successfully" });
+    await pool.query('INSERT INTO registration (user_id, event_id) VALUES (?, ?)', [id, event_id]);
+
+    res.status(201).json({ message: "Registered successfully" });
 
   } catch (error) {
-      res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 })
 
@@ -676,24 +676,24 @@ app.get('/get_registration', async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-      return res.status(401).json({ error: "Token missing or invalid" });
+    return res.status(401).json({ error: "Token missing or invalid" });
   }
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLogin = decoded.login;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
 
-      const id = await get_user_id(userLogin);
-      if (id === -1) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    const id = await get_user_id(userLogin);
+    if (id === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      const [result] = await pool.query('SELECT * FROM registration WHERE user_id = ?', [id]);
+    const [result] = await pool.query('SELECT * FROM registration WHERE user_id = ?', [id]);
 
-      res.status(200).json(result);
+    res.status(200).json(result);
 
   } catch (error) {
-      res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -706,32 +706,32 @@ app.get('/is_resgiter', async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-      return res.status(401).json({ error: "Token missing or invalid" });
+    return res.status(401).json({ error: "Token missing or invalid" });
   }
 
-  const event_id = req.query.event_id; 
+  const event_id = req.query.event_id;
   if (!event_id) {
-      return res.status(400).json({ error: "Missing event ID" });
+    return res.status(400).json({ error: "Missing event ID" });
   }
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLogin = decoded.login;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
 
-      const id = await get_user_id(userLogin);
-      if (id === -1) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    const id = await get_user_id(userLogin);
+    if (id === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      const [result] = await pool.query(
-          'SELECT * FROM registration WHERE user_id = ? AND event_id = ?',
-          [id, event_id]
-      );
+    const [result] = await pool.query(
+      'SELECT * FROM registration WHERE user_id = ? AND event_id = ?',
+      [id, event_id]
+    );
 
-      return res.status(200).json({ registered: result.length > 0 });
+    return res.status(200).json({ registered: result.length > 0 });
   } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Internal server error" });
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -743,36 +743,36 @@ app.delete('/delete_register', async (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-      return res.status(401).json({ error: "Token missing or invalid" });
+    return res.status(401).json({ error: "Token missing or invalid" });
   }
 
   const event_id = req.query.event_id;
   if (!event_id) {
-      return res.status(400).json({ error: "Missing event ID" });
+    return res.status(400).json({ error: "Missing event ID" });
   }
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLogin = decoded.login;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLogin = decoded.login;
 
-      const id = await get_user_id(userLogin);
-      if (id === -1) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    const id = await get_user_id(userLogin);
+    if (id === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      const [result] = await pool.query(
-          'DELETE FROM registration WHERE user_id = ? AND event_id = ?',
-          [id, event_id]
-      );
+    const [result] = await pool.query(
+      'DELETE FROM registration WHERE user_id = ? AND event_id = ?',
+      [id, event_id]
+    );
 
-      if (result.affectedRows === 0) {
-          return res.status(404).json({ error: "No registration found to delete" });
-      }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "No registration found to delete" });
+    }
 
-      return res.status(200).json({ message: "Registration deleted successfully" });
+    return res.status(200).json({ message: "Registration deleted successfully" });
   } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Internal server error" });
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 })
 
@@ -870,7 +870,7 @@ app.delete('/events_delete', async (req, res) => {
 //     return res.status(400).json("Missing required data");
 //   }
 
-//   const image = req.file ? `http://13.60.16.112/uploads/${req.file.filename}` : null;
+//   const image = req.file ? `http://${process.env._IP}/uploads/${req.file.filename}` : null;
 //   const time24h = convert_houre(time);
 //   const eventDateTime = new Date(`${date}T${time24h}`);
 
